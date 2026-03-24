@@ -219,7 +219,7 @@
       "id": "T012",
       "title": "优化和文档",
       "description": "优化 Prompt 和编写文档",
-      "status": "pending",
+      "status": "completed",
       "priority": 12,
       "category": "优化",
       "steps": [
@@ -229,14 +229,21 @@
         "优化补救题 Prompt",
         "编写 README.md"
       ],
-      "notes": []
+      "notes": [
+        "优化知识点提取 Prompt",
+        "完善 README.md 文档",
+        "创建 USAGE.md 使用指南",
+        "所有任务已完成"
+      ],
+      "started_at": "2026-03-24T18:01:49.337Z",
+      "completed_at": "2026-03-24T18:03:36.164Z"
     }
   ],
   "statistics": {
     "total": 12,
-    "pending": 1,
+    "pending": 0,
     "in_progress": 0,
-    "completed": 11,
+    "completed": 12,
     "blocked": 0
   }
 }
