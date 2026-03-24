@@ -1,6 +1,7 @@
 # services/deepseek_client.py - DeepSeek API 调用客户端
 import httpx
 import json
+import re
 import time
 from typing import Dict, Any, Optional
 from config import DEEPSEEK_API_KEY, DEEPSEEK_BASE_URL, DEEPSEEK_MODEL
@@ -8,6 +9,7 @@ from utils.logger import get_logger
 from utils.formatters import clean_json_response
 
 logger = get_logger(__name__)
+
 
 class DeepSeekClient:
     def __init__(self, max_retries: int = 3, timeout: int = 30):
@@ -19,7 +21,8 @@ class DeepSeekClient:
         }
     
     def call(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
-        """调用 DeepSeek API
+        """
+        调用 DeepSeek API
         
         Args:
             system_prompt: 模型角色设定
@@ -52,45 +55,59 @@ class DeepSeekClient:
                     return clean_json_response(result)
                 else:
                     error_msg = f"API 调用失败: {response.status_code} - {response.text}"
-                    logger.error(f"API 调用失败: {error_msg}")
+                    logger.error(error_msg)
                     if attempt < self.max_retries - 1:
-                        logger.warning(f"第 {attempt + 1} 失败，等待 2 移...")
+                        logger.warning(f"第 {attempt + 1} 次失败，等待 2 秒...")
+                        time.sleep(2)
                         continue
-                
-                # 所有重试都失败
-                raise Exception(f"API 调用失败，已达到最大重试次数: {self.max_retries}")
-        
-        except httpx.Timeout as e:
-            logger.error(f"请求超时: {e}")
-            raise
-        except httpx.RequestError as e:
-            logger.error(f"请求错误: {e}")
-            raise
-        except Exception as e:
-            logger.error(f"未知错误: {e}")
-            raise
+                    
+                    raise Exception(f"API 调用失败，已达到最大重试次数: {self.max_retries}")
+            
+            except httpx.Timeout as e:
+                logger.error(f"请求超时: {e}")
+                raise
+            except httpx.RequestError as e:
+                logger.error(f"请求错误: {e}")
+                raise
+            except Exception as e:
+                logger.error(f"未知错误: {e}")
+                raise
     
     def call_json(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         """强制返回 JSON 格式"""
         response = self.call(system_prompt, user_prompt)
         
+        # 如果已经是字典且包含数据，直接返回
+        if isinstance(response, dict) and 'error' not in response:
+            return response
+        
+        # 获取内容字符串
+        if isinstance(response, dict):
+            content = response.get('raw_content', str(response))
+        else:
+            content = str(response)
+        
         # 尝试提取 ```json ... ``` 中的内容
-        json_match = re.search(r'```json\s*(.*?)\s*(.*?)(```)', content, json_str = None
-        # 尝试提取 ```json... ``` 中的内容（第二个多行代码块）
-        cleaned = content.strip()
-        if cleaned.startswith('```'):
-            cleaned = cleaned[3:]
-        if cleaned.endswith('```'):
-            cleaned = cleaned[:-3]
+        json_match = re.search(r'```json\s*(.*?)\s*(```)', content, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1).strip()
+        else:
+            # 尝试提取 ```... ``` 中的内容
+            cleaned = content.strip()
+            if cleaned.startswith('```'):
+                cleaned = cleaned[3:]
+            if cleaned.endswith('```'):
+                cleaned = cleaned[:-3]
+            json_str = cleaned
         
         try:
-            result = json.loads(cleaned)
-            logger.info(f"成功解析 JSON")
+            result = json.loads(json_str)
+            logger.info("成功解析 JSON")
             return result
         except json.JSONDecodeError as e:
             logger.warning(f"JSON 解析失败: {e}")
             # 尝试修复常见的 JSON 格式问题
-            cleaned = cleaned.strip()
+            cleaned = json_str.strip()
             if cleaned.startswith('{'):
                 cleaned = cleaned[1:]
             if cleaned.endswith('}'):
@@ -98,9 +115,8 @@ class DeepSeekClient:
             
             try:
                 result = json.loads(cleaned)
-                logger.info(f"修复后成功解析 JSON")
+                logger.info("修复后成功解析 JSON")
                 return result
             except:
                 logger.error(f"无法解析为 JSON: {cleaned[:200]}...")
                 raise ValueError(f"无法解析模型输出: {cleaned[:200]}")
-    """

@@ -3,7 +3,6 @@ import logging
 import sys
 from datetime import datetime
 from typing import Optional, Dict, Any
-
 from config import DEBUG_MODE
 
 class Logger:
@@ -20,7 +19,7 @@ class Logger:
         # 添加控制台处理器
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter(
-            f'{asctime} - {name} - {levelname} - {message}'
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         ))
         self.logger.addHandler(handler)
     
