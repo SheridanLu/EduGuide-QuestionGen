@@ -1,0 +1,213 @@
+{
+  "project": "EduGuide-QuestionGen",
+  "version": "1.0.0",
+  "created": "2026-03-24",
+  "description": "基于 OpenClaw + DeepSeek 的智能出题系统",
+  "tech_stack": {
+    "backend": "Python + DeepSeek API",
+    "workflow": "OpenClaw",
+    "frontend": "Streamlit"
+  },
+  "tasks": [
+    {
+      "id": "T001",
+      "title": "搭建项目基础结构",
+      "description": "创建项目目录结构、配置文件、依赖列表",
+      "status": "completed",
+      "priority": 1,
+      "category": "基础",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建项目目录结构",
+        "创建 config.py 配置文件",
+        "创建 requirements.txt 依赖列表",
+        "创建 .env 环境变量模板"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T002",
+      "title": "实现 DeepSeek API 客户端",
+      "description": "封装 DeepSeek API 调用逻辑，包括重试机制",
+      "status": "completed",
+      "priority": 2,
+      "category": "核心",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 services/deepseek_client.py",
+        "实现 call() 方法",
+        "实现 call_json() 方法",
+        "添加错误处理和重试机制"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T003",
+      "title": "实现工具函数",
+      "description": "创建日志工具和格式化工具",
+      "status": "completed",
+      "priority": 3,
+      "category": "工具",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 utils/logger.py",
+        "创建 utils/formatters.py",
+        "实现日志记录功能",
+        "实现 JSON 清理功能"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T004",
+      "title": "创建 Prompt 模板",
+      "description": "为每个 Agent 创建独立的 Prompt 模板",
+      "status": "completed",
+      "priority": 4,
+      "category": "Prompt",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 prompts/knowledge_prompt.py",
+        "创建 prompts/question_prompt.py",
+        "创建 prompts/answer_prompt.py",
+        "创建 prompts/remedial_prompt.py"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T005",
+      "title": "实现知识提取 Agent",
+      "description": "创建知识点提取 Agent",
+      "status": "completed",
+      "priority": 5,
+      "category": "Agent",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 agents/knowledge_agent.py",
+        "实现 run() 方法",
+        "实现 run_with_files() 方法",
+        "测试知识点提取功能"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T006",
+      "title": "实现分层出题 Agent",
+      "description": "创建分层出题 Agent",
+      "status": "completed",
+      "priority": 6,
+      "category": "Agent",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 agents/question_agent.py",
+        "实现 run() 方法",
+        "实现三层难度题目生成",
+        "测试出题功能"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T007",
+      "title": "实现答案解析 Agent",
+      "description": "创建答案解析 Agent",
+      "status": "completed",
+      "priority": 7,
+      "category": "Agent",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 agents/answer_agent.py",
+        "实现 run() 方法",
+        "实现答案和解析生成",
+        "测试答案解析功能"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T008",
+      "title": "实现补救题 Agent",
+      "description": "创建补救题生成 Agent",
+      "status": "completed",
+      "priority": 8,
+      "category": "Agent",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 agents/remedial_agent.py",
+        "实现 run() 方法",
+        "实现针对性补救题生成",
+        "测试补救题功能"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T009",
+      "title": "实现 OpenClaw 工作流",
+      "description": "创建工作流主控脚本，协调多个 Agent",
+      "status": "completed",
+      "priority": 9,
+      "category": "工作流",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 workflow/openclaw_flow.py",
+        "实现 run() 方法",
+        "实现串行执行逻辑",
+        "实现条件执行（补救题）",
+        "测试完整工作流"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T010",
+      "title": "创建 Streamlit 前端",
+      "description": "创建 Streamlit 用户界面",
+      "status": "completed",
+      "priority": 10,
+      "category": "前端",
+      "completed_at": "2026-03-24T23:00:00+08:00",
+      "steps": [
+        "创建 streamlit_app.py",
+        "实现教材输入界面",
+        "实现结果展示界面",
+        "实现工作流触发"
+      ],
+      "notes": ["已完成"]
+    },
+    {
+      "id": "T011",
+      "title": "测试和验证",
+      "description": "测试完整系统功能",
+      "status": "pending",
+      "priority": 11,
+      "category": "测试",
+      "steps": [
+        "测试知识点提取",
+        "测试分层出题",
+        "测试答案解析",
+        "测试补救题生成",
+        "测试完整工作流"
+      ],
+      "notes": []
+    },
+    {
+      "id": "T012",
+      "title": "优化和文档",
+      "description": "优化 Prompt 和编写文档",
+      "status": "pending",
+      "priority": 12,
+      "category": "优化",
+      "steps": [
+        "优化知识点提取 Prompt",
+        "优化分层出题 Prompt",
+        "优化答案解析 Prompt",
+        "优化补救题 Prompt",
+        "编写 README.md"
+      ],
+      "notes": []
+    }
+  ],
+  "statistics": {
+    "total": 12,
+    "pending": 2,
+    "in_progress": 0,
+    "completed": 10,
+    "blocked": 0
+  }
+}
