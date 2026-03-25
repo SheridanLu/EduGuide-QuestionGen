@@ -70,3 +70,6 @@ class KnowledgeAgent:
         
         logger.info(f"[{self.name}] 结果已保存到 {output_path}")
         return result
+    
+    # 别名，保持一致性
+    run_with_files = run_with_file
