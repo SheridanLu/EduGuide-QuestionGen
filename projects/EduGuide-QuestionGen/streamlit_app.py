@@ -1,4 +1,4 @@
-# streamlit_app.py - 简洁优雅版界面
+# streamlit_app.py - 简洁优雅版界面 + 交互式引导
 import streamlit as st
 import json
 import os
@@ -37,6 +37,19 @@ T = {
         "save": "Save",
         "saved": "Saved",
         "lang": "Language",
+        "start_practice": "🎯 Start Practice",
+        "interactive": "Interactive Practice",
+        "step": "Step",
+        "your_answer": "Your Answer",
+        "submit": "Submit",
+        "hint": "Hint",
+        "correct": "Correct!",
+        "try_again": "Try again",
+        "next_step": "Next Step",
+        "complete": "Complete",
+        "progress": "Progress",
+        "expand": "Click to expand",
+        "practice_hint": "💡 Practice step-by-step with verification",
     },
     "zh-CN": {
         "title": "EduGuide",
@@ -64,6 +77,19 @@ T = {
         "save": "保存",
         "saved": "已保存",
         "lang": "语言",
+        "start_practice": "🎯 开始练习",
+        "interactive": "交互式练习",
+        "step": "步骤",
+        "your_answer": "你的答案",
+        "submit": "提交",
+        "hint": "提示",
+        "correct": "正确！",
+        "try_again": "再试一次",
+        "next_step": "下一步",
+        "complete": "完成",
+        "progress": "进度",
+        "expand": "点击展开",
+        "practice_hint": "💡 一步步练习，验证每个答案",
     },
     "zh-TW": {
         "title": "EduGuide",
@@ -91,6 +117,19 @@ T = {
         "save": "儲存",
         "saved": "已儲存",
         "lang": "語言",
+        "start_practice": "🎯 開始練習",
+        "interactive": "交互式練習",
+        "step": "步驟",
+        "your_answer": "你的答案",
+        "submit": "提交",
+        "hint": "提示",
+        "correct": "正確！",
+        "try_again": "再試一次",
+        "next_step": "下一步",
+        "complete": "完成",
+        "progress": "進度",
+        "expand": "點擊展開",
+        "practice_hint": "💡 一步步練習，驗證每個答案",
     }
 }
 
@@ -108,17 +147,14 @@ st.set_page_config(
 # ========== 自定义CSS ==========
 st.markdown("""
 <style>
-    /* 隐藏默认元素 */
     #MainMenu, footer, header, .stDeployButton {visibility: hidden;}
     
-    /* 主容器 */
     .main .block-container {
         padding-top: 3rem;
         padding-bottom: 3rem;
         max-width: 800px;
     }
     
-    /* 标题 */
     .title {
         font-size: 2.5rem;
         font-weight: 700;
@@ -134,7 +170,6 @@ st.markdown("""
         margin-bottom: 3rem;
     }
     
-    /* 上传区域 */
     .upload-box {
         border: 2px dashed #d0d0d0;
         border-radius: 16px;
@@ -160,7 +195,6 @@ st.markdown("""
         font-size: 0.95rem;
     }
     
-    /* 输入框 */
     .stTextArea textarea {
         border-radius: 12px;
         border: 1px solid #e0e0e0;
@@ -174,7 +208,6 @@ st.markdown("""
         box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
     }
     
-    /* 按钮 */
     .stButton button {
         width: 100%;
         border-radius: 12px;
@@ -192,11 +225,6 @@ st.markdown("""
         transform: translateY(-1px);
     }
     
-    .stButton button:active {
-        transform: translateY(0);
-    }
-    
-    /* 卡片 */
     .card {
         background: white;
         border-radius: 16px;
@@ -206,7 +234,6 @@ st.markdown("""
         box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
     
-    /* 标签页 */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         background: #f5f5f5;
@@ -228,12 +255,6 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     
-    /* 选择框 */
-    .stSelectbox, .stTextInput {
-        margin-bottom: 1rem;
-    }
-    
-    /* 侧边栏 */
     [data-testid="stSidebar"] {
         background: white;
         border-right: 1px solid #eee;
@@ -243,26 +264,11 @@ st.markdown("""
         padding: 2rem 1.5rem;
     }
     
-    /* 统计数字 */
-    .stat {
-        text-align: center;
-        padding: 1rem;
-    }
-    
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #1a1a1a;
-    }
-    
-    .stat-label {
+    .hint {
         font-size: 0.85rem;
         color: #999;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
     
-    /* 题目卡片 */
     .question-card {
         padding: 1.25rem;
         border-left: 3px solid #4a90e2;
@@ -271,26 +277,50 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     
-    /* 分隔线 */
-    .divider {
-        height: 1px;
-        background: #eee;
-        margin: 2rem 0;
+    .practice-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        text-align: center;
     }
     
-    /* 小字提示 */
-    .hint {
-        font-size: 0.85rem;
-        color: #999;
+    .practice-btn button {
+        background: white !important;
+        color: #667eea !important;
     }
     
-    /* 成功消息 */
-    .success-msg {
+    .step-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid #4a90e2;
+    }
+    
+    .step-active {
+        background: #e3f2fd;
+        border-left-color: #2196f3;
+    }
+    
+    .step-complete {
         background: #e8f5e9;
-        color: #2e7d32;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
+        border-left-color: #4caf50;
+    }
+    
+    .progress-bar {
+        height: 8px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4a90e2 0%, #667eea 100%);
+        transition: width 0.3s ease;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -302,6 +332,12 @@ if 'text' not in st.session_state:
     st.session_state.text = ""
 if 'result' not in st.session_state:
     st.session_state.result = None
+if 'practice_question' not in st.session_state:
+    st.session_state.practice_question = None
+if 'current_step' not in st.session_state:
+    st.session_state.current_step = 0
+if 'answers' not in st.session_state:
+    st.session_state.answers = {}
 
 lang = st.session_state.lang
 
@@ -309,19 +345,18 @@ lang = st.session_state.lang
 with st.sidebar:
     st.markdown(f"### ⚙️ {t('api', lang)}")
     
-    # 语言选择
-    st.markdown(f"**{t('lang', lang)}**")
-    new_lang = st.selectbox("", list(LANGUAGES.keys()), 
-                           format_func=lambda x: LANGUAGES[x],
-                           index=list(LANGUAGES.keys()).index(lang),
-                           label_visibility="collapsed")
+    new_lang = st.selectbox(
+        f"**{t('lang', lang)}**",
+        list(LANGUAGES.keys()),
+        format_func=lambda x: LANGUAGES[x],
+        index=list(LANGUAGES.keys()).index(lang)
+    )
     if new_lang != lang:
         st.session_state.lang = new_lang
         st.rerun()
     
     st.markdown("---")
     
-    # API 配置
     try:
         from config.api_config import get_config_manager, APIProvider, ProviderConfig
         cm = get_config_manager()
@@ -330,19 +365,17 @@ with st.sidebar:
         providers = cm.get_all_providers()
         options = {p['id']: p['name'] for p in providers}
         
-        st.markdown(f"**{t('provider', lang)}**")
-        selected = st.selectbox("", list(options.keys()),
-                               format_func=lambda x: options[x],
-                               index=list(options.keys()).index(current.value),
-                               label_visibility="collapsed")
+        selected = st.selectbox(
+            f"**{t('provider', lang)}**",
+            list(options.keys()),
+            format_func=lambda x: options[x],
+            index=list(options.keys()).index(current.value)
+        )
         
         config = cm.providers.get(APIProvider(selected))
         
-        st.markdown(f"**{t('key', lang)}**")
-        key = st.text_input("", value=config.api_key, type="password", label_visibility="collapsed")
-        
-        st.markdown(f"**{t('model', lang)}**")
-        model = st.text_input("", value=config.model, label_visibility="collapsed")
+        key = st.text_input(f"**{t('key', lang)}**", value=config.api_key, type="password")
+        model = st.text_input(f"**{t('model', lang)}**", value=config.model)
         
         if st.button(t('save', lang), use_container_width=True):
             new_cfg = ProviderConfig(name=config.name, api_key=key, 
@@ -392,26 +425,14 @@ if uploaded:
     except Exception as e:
         st.error(f"Error: {e}")
 
-# 文本输入
-text = st.text_area(
-    t('input', lang),
-    value=st.session_state.text,
-    height=200,
-    label_visibility="collapsed"
-)
+text = st.text_area(t('input', lang), value=st.session_state.text, height=200, label_visibility="collapsed")
 if text:
     st.session_state.text = text
     st.markdown(f'<div class="hint">{len(text)} {t("words", lang)}</div>', unsafe_allow_html=True)
 
-# 错误点
 st.markdown("---")
-error = st.text_input(
-    t('error', lang),
-    placeholder=t('error_hint', lang),
-    label_visibility="collapsed"
-)
+error = st.text_input(t('error', lang), placeholder=t('error_hint', lang), label_visibility="collapsed")
 
-# 生成按钮
 st.markdown("")
 if st.button(t('generate', lang), type="primary"):
     if not text:
@@ -427,7 +448,7 @@ if st.button(t('generate', lang), type="primary"):
             except Exception as e:
                 st.error(f"Error: {e}")
 
-# 结果展示
+# ========== 结果展示（含交互式练习）==========
 if st.session_state.result:
     st.markdown("---")
     
@@ -466,22 +487,127 @@ if st.session_state.result:
                     for i, q in enumerate(data[level], 1):
                         st.markdown(f'<div class="question-card"><strong>Q{i}:</strong> {q}</div>', unsafe_allow_html=True)
     
-    # 引导
+    # 引导（含交互式练习）
     with tab3:
         ap = "output/answers.json"
         if os.path.exists(ap):
             with open(ap, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
+            # 交互式练习提示
+            st.markdown(f"""
+            <div class="practice-card">
+                <h3>{t('interactive', lang)}</h3>
+                <p>{t('practice_hint', lang)}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
             for level in ["basic", "intermediate", "advanced"]:
                 if level in data:
+                    level_names = {
+                        "basic": f"🟢 {t('basic', lang)}",
+                        "intermediate": f"🟡 {t('intermediate', lang)}",
+                        "advanced": f"🔴 {t('advanced', lang)}"
+                    }
+                    st.markdown(f"### {level_names[level]}")
+                    
                     for i, item in enumerate(data[level], 1):
                         if isinstance(item, dict):
-                            with st.expander(f"Q{i}: {item.get('question', '')[:50]}..."):
-                                g = item.get('guidance', {})
-                                for step in ['step1', 'step2', 'step3']:
-                                    if step in g:
-                                        st.markdown(f"**{step.upper()}:** {g[step]}")
+                            q_id = f"{level}_{i}"
+                            question = item.get('question', '')
+                            guidance = item.get('guidance', {})
+                            
+                            # 如果正在练习这道题
+                            if st.session_state.practice_question == q_id:
+                                steps = [
+                                    guidance.get('step1', ''),
+                                    guidance.get('step2', ''),
+                                    guidance.get('step3', '')
+                                ]
+                                total_steps = len([s for s in steps if s])
+                                current = st.session_state.current_step
+                                
+                                # 进度条
+                                progress = current / total_steps if total_steps > 0 else 0
+                                st.markdown(f"**{t('progress', lang)}: {current}/{total_steps}**")
+                                st.progress(progress)
+                                
+                                st.markdown(f"**{question}**")
+                                st.markdown("---")
+                                
+                                # 显示已完成的步骤
+                                for idx in range(current):
+                                    st.markdown(f"""
+                                    <div class="step-card step-complete">
+                                        <strong>✅ {t('step', lang)} {idx+1}:</strong><br>
+                                        {steps[idx]}<br>
+                                        <small>你的答案: {st.session_state.answers.get(f"{q_id}_{idx}", '')}</small>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                
+                                # 当前步骤
+                                if current < total_steps:
+                                    st.markdown(f"""
+                                    <div class="step-card step-active">
+                                        <strong>{t('step', lang)} {current+1}:</strong><br>
+                                        {steps[current]}
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    
+                                    # 答案输入
+                                    answer_key = f"{q_id}_{current}"
+                                    user_answer = st.text_area(
+                                        t('your_answer', lang),
+                                        key=f"answer_{q_id}_{current}",
+                                        height=100
+                                    )
+                                    
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        if st.button(f"✅ {t('submit', lang)}", key=f"submit_{q_id}_{current}"):
+                                            if user_answer.strip():
+                                                # 保存答案
+                                                st.session_state.answers[answer_key] = user_answer
+                                                # 进入下一步
+                                                st.session_state.current_step += 1
+                                                st.success(t('correct', lang))
+                                                st.rerun()
+                                            else:
+                                                st.warning(t('try_again', lang))
+                                    
+                                    with col2:
+                                        if st.button(f"💡 {t('hint', lang)}", key=f"hint_{q_id}_{current}"):
+                                            hints = guidance.get('hints', [])
+                                            if hints and current < len(hints):
+                                                st.info(hints[current])
+                                            else:
+                                                st.info("Think about the key concepts in the question." if lang == "en" else "想想题目中的关键概念。")
+                                
+                                else:
+                                    # 完成所有步骤
+                                    st.success(f"🎉 {t('complete', lang)}!")
+                                    if st.button(f"✅ {t('complete', lang)}", key=f"complete_{q_id}"):
+                                        st.session_state.practice_question = None
+                                        st.session_state.current_step = 0
+                                        st.rerun()
+                                
+                                # 返回按钮
+                                if st.button("← 返回", key=f"back_{q_id}"):
+                                    st.session_state.practice_question = None
+                                    st.session_state.current_step = 0
+                                    st.rerun()
+                            
+                            else:
+                                # 题目卡片（未开始练习）
+                                with st.expander(f"**Q{i}:** {question[:60]}..."):
+                                    st.markdown(f"**{question}**")
+                                    st.markdown("")
+                                    
+                                    # 开始练习按钮
+                                    if st.button(f"🎯 {t('start_practice', lang)}", key=f"start_{q_id}", type="primary"):
+                                        st.session_state.practice_question = q_id
+                                        st.session_state.current_step = 0
+                                        st.rerun()
     
     # 补救
     with tab4:
