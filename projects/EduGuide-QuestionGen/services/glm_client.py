@@ -14,7 +14,7 @@ logger = get_logger(__name__)
 class GLMClient:
     """智谱 GLM API 客户端"""
     
-    def __init__(self, max_retries: int = 3, timeout: int = 30):
+    def __init__(self, max_retries: int = 3, timeout: int = 60):
         self.max_retries = max_retries
         self.timeout = timeout
         self.headers = {
@@ -68,8 +68,19 @@ class GLMClient:
                     
                     raise Exception(f"API 调用失败，已达到最大重试次数: {self.max_retries}")
             
-            except httpx.Timeout as e:
+            except httpx.ReadTimeout as e:
                 logger.error(f"请求超时: {e}")
+                if attempt < self.max_retries - 1:
+                    logger.warning(f"第 {attempt + 1} 次超时，等待 3 秒后重试...")
+                    time.sleep(3)
+                    continue
+                raise
+            except httpx.ConnectTimeout as e:
+                logger.error(f"连接超时: {e}")
+                if attempt < self.max_retries - 1:
+                    logger.warning(f"第 {attempt + 1} 次连接超时，等待 3 秒后重试...")
+                    time.sleep(3)
+                    continue
                 raise
             except httpx.RequestError as e:
                 logger.error(f"请求错误: {e}")
