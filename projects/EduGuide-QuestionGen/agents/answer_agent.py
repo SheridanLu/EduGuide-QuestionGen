@@ -34,7 +34,7 @@ class AnswerAgent:
                 kp_data = json.loads(knowledge_points)
                 if isinstance(kp_data, dict):
                     knowledge_points = json.dumps(kp_data.get("knowledge_points", []), ensure_ascii=False)
-            except:
+            except Exception:
                 pass
         
         # 将题目转为字符串
@@ -59,24 +59,28 @@ class AnswerAgent:
     
     def run_with_files(self, material_path: str, knowledge_path: str, questions_path: str, output_path: str) -> Dict[str, Any]:
         """使用文件系统运行"""
-        # 读取输入
-        with open(material_path, 'r', encoding='utf-8') as f:
-            material_text = f.read()
-        
-        with open(knowledge_path, 'r', encoding='utf-8') as f:
-            knowledge_data = json.load(f)
-            knowledge_points = json.dumps(knowledge_data.get("knowledge_points", []), ensure_ascii=False)
-        
-        with open(questions_path, 'r', encoding='utf-8') as f:
-            questions = json.load(f)
-        
-        # 执行
-        result = self.run(material_text, knowledge_points, questions)
-        
-        # 保存输出
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(result, f, ensure_ascii=False, indent=2)
-        
-        logger.info(f"[{self.name}] 结果已保存到 {output_path}")
-        return result
+        try:
+            # 读取输入
+            with open(material_path, 'r', encoding='utf-8') as f:
+                material_text = f.read()
+            
+            with open(knowledge_path, 'r', encoding='utf-8') as f:
+                knowledge_data = json.load(f)
+                knowledge_points = json.dumps(knowledge_data.get("knowledge_points", []), ensure_ascii=False)
+            
+            with open(questions_path, 'r', encoding='utf-8') as f:
+                questions = json.load(f)
+            
+            # 执行
+            result = self.run(material_text, knowledge_points, questions)
+            
+            # 保存输出
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            with open(output_path, 'w', encoding='utf-8') as f:
+                json.dump(result, f, ensure_ascii=False, indent=2)
+            
+            logger.info(f"[{self.name}] 结果已保存到 {output_path}")
+            return result
+        except Exception as e:
+            logger.error(f"[{self.name}] run_with_files 失败: {e}")
+            raise
