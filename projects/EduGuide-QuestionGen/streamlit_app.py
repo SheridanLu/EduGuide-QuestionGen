@@ -40,6 +40,21 @@ def read_uploaded_file(uploaded_file):
                 st.error("❌ Word 支持未安装，请运行: pip install python-docx")
                 return None
         
+        elif uploaded_file.name.endswith('.pptx'):
+            try:
+                from pptx import Presentation
+                prs = Presentation(uploaded_file)
+                text = ""
+                for slide_num, slide in enumerate(prs.slides, 1):
+                    text += f"\n=== 幻灯片 {slide_num} ===\n"
+                    for shape in slide.shapes:
+                        if hasattr(shape, "text") and shape.text.strip():
+                            text += shape.text + "\n"
+                return text
+            except ImportError:
+                st.error("❌ PowerPoint 支持未安装，请运行: pip install python-pptx")
+                return None
+        
         else:
             st.error(f"❌ 不支持的文件格式: {uploaded_file.name}")
             return None
@@ -268,8 +283,8 @@ def main():
         st.markdown("**方式1: 上传文件**")
         uploaded_file = st.file_uploader(
             "上传教材文件",
-            type=['txt', 'pdf', 'docx'],
-            help="支持格式: .txt, .pdf, .docx"
+            type=['txt', 'pdf', 'docx', 'pptx'],
+            help="支持格式: .txt, .pdf, .docx, .pptx"
         )
         
         if uploaded_file is not None:
