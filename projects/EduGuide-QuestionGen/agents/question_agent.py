@@ -2,7 +2,7 @@
 import json
 import os
 from typing import Dict, Any
-from services.deepseek_client import DeepSeekClient
+from services.glm_client import GLMClient as DeepSeekClient
 from prompts.question_prompt import build_question_prompt
 from utils.logger import get_logger
 
