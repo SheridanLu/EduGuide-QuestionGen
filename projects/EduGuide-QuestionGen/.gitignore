@@ -38,6 +38,9 @@ env/
 .env.local
 .env.*.local
 
+# API 配置文件（包含密钥）
+config/api_settings.json
+
 # 日志
 logs/
 *.log

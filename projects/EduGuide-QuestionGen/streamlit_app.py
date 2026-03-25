@@ -1,4 +1,4 @@
-# streamlit_app.py - Streamlit 前端界面（支持文件上传）
+# streamlit_app.py - Streamlit 前端界面（支持多 API 提供商）
 import streamlit as st
 import json
 import os
@@ -6,6 +6,8 @@ from datetime import datetime
 from workflow.openclaw_flow import OpenClawFlow
 from utils.logger import get_logger
 from utils.formatters import format_knowledge_output, format_questions_output
+from config.api_config import APIProvider, get_config_manager, ProviderConfig
+from services.unified_client import create_client
 
 logger = get_logger(__name__)
 
@@ -13,12 +15,10 @@ def read_uploaded_file(uploaded_file):
     """读取上传的文件内容"""
     try:
         if uploaded_file.name.endswith('.txt'):
-            # 读取 txt 文件
             content = uploaded_file.read().decode('utf-8')
             return content
         
         elif uploaded_file.name.endswith('.pdf'):
-            # 读取 PDF 文件（需要 PyPDF2）
             try:
                 import PyPDF2
                 pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -31,7 +31,6 @@ def read_uploaded_file(uploaded_file):
                 return None
         
         elif uploaded_file.name.endswith('.docx'):
-            # 读取 Word 文件（需要 python-docx）
             try:
                 import docx
                 doc = docx.Document(uploaded_file)
@@ -49,6 +48,160 @@ def read_uploaded_file(uploaded_file):
         st.error(f"❌ 读取文件失败: {e}")
         return None
 
+def show_settings_page():
+    """显示设置页面"""
+    st.title("⚙️ API 设置")
+    st.markdown("配置和管理 API 提供商")
+    
+    config_manager = get_config_manager()
+    
+    # 获取所有提供商
+    providers = config_manager.get_all_providers()
+    
+    # 当前提供商
+    current_provider = config_manager.current_provider
+    
+    # 提供商选择
+    st.subheader("📡 选择 API 提供商")
+    
+    provider_options = {
+        p['id']: f"{p['name']} {'✅' if p['configured'] else '⚠️ 未配置'}" 
+        for p in providers
+    }
+    
+    selected_provider = st.selectbox(
+        "选择要使用的 API 提供商",
+        options=list(provider_options.keys()),
+        index=list(provider_options.keys()).index(current_provider.value),
+        format_func=lambda x: provider_options[x]
+    )
+    
+    # 显示当前提供商信息
+    selected_enum = APIProvider(selected_provider)
+    config = config_manager.providers.get(selected_enum)
+    
+    st.markdown("---")
+    
+    # 配置表单
+    st.subheader(f"🔑 配置 {config.name}")
+    
+    with st.form("api_config_form"):
+        # API Key
+        api_key = st.text_input(
+            "API Key",
+            value=config.api_key,
+            type="password",
+            help=f"输入 {config.name} 的 API Key"
+        )
+        
+        # Base URL
+        if selected_enum == APIProvider.CUSTOM:
+            base_url = st.text_input(
+                "API Base URL",
+                value=config.base_url,
+                help="自定义 API 的 Base URL"
+            )
+        else:
+            base_url = st.text_input(
+                "API Base URL",
+                value=config.base_url,
+                disabled=True,
+                help=f"{config.name} 的默认 API URL"
+            )
+        
+        # 模型选择
+        available_models = {
+            APIProvider.ZHIPU: ["glm-4-flash", "glm-4", "glm-4-plus", "glm-4-air"],
+            APIProvider.DEEPSEEK: ["deepseek-chat", "deepseek-coder"],
+            APIProvider.OPENAI: ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gpt-4o"],
+            APIProvider.CLAUDE: ["claude-3-haiku-20240307", "claude-3-sonnet-20240229", "claude-3-opus-20240229"],
+            APIProvider.QWEN: ["qwen-turbo", "qwen-plus", "qwen-max"],
+            APIProvider.OLLAMA: ["llama2", "llama3", "mistral", "codellama", "qwen2"],
+            APIProvider.CUSTOM: [config.model]
+        }
+        
+        models = available_models.get(selected_enum, [config.model])
+        
+        selected_model = st.selectbox(
+            "选择模型",
+            options=models,
+            index=models.index(config.model) if config.model in models else 0
+        )
+        
+        # 自定义模型输入
+        if selected_enum == APIProvider.CUSTOM:
+            custom_model = st.text_input(
+                "自定义模型名称",
+                value=config.model,
+                help="输入自定义模型的名称"
+            )
+            selected_model = custom_model
+        
+        # 提交按钮
+        col1, col2, col3 = st.columns([1, 1, 2])
+        
+        with col1:
+            submitted = st.form_submit_button("💾 保存配置", type="primary")
+        
+        with col2:
+            test_clicked = st.form_submit_button("🧪 测试连接")
+    
+    # 处理表单提交
+    if submitted:
+        # 更新配置
+        new_config = ProviderConfig(
+            name=config.name,
+            api_key=api_key,
+            base_url=base_url,
+            model=selected_model,
+            enabled=True
+        )
+        
+        config_manager.update_provider_config(selected_enum, new_config)
+        config_manager.set_current_provider(selected_enum)
+        
+        st.success(f"✅ {config.name} 配置已保存！")
+        st.rerun()
+    
+    if test_clicked:
+        if not api_key:
+            st.error("❌ 请先输入 API Key")
+        else:
+            with st.spinner("正在测试连接..."):
+                try:
+                    # 临时创建配置进行测试
+                    test_config = ProviderConfig(
+                        name=config.name,
+                        api_key=api_key,
+                        base_url=base_url,
+                        model=selected_model,
+                        enabled=True
+                    )
+                    
+                    from services.unified_client import UnifiedAPIClient
+                    client = UnifiedAPIClient(test_config)
+                    
+                    # 发送测试请求
+                    result = client.call(
+                        system_prompt="你是一个助手",
+                        user_prompt="请回复'测试成功'"
+                    )
+                    
+                    st.success(f"✅ 连接成功！模型响应正常")
+                    st.json(result)
+                    
+                except Exception as e:
+                    st.error(f"❌ 连接失败: {e}")
+    
+    # 显示所有提供商状态
+    st.markdown("---")
+    st.subheader("📊 所有提供商状态")
+    
+    for provider_data in providers:
+        with st.expander(f"{provider_data['name']} {'✅' if provider_data['configured'] else '⚠️'}"):
+            st.write(f"**已配置**: {'是' if provider_data['configured'] else '否'}")
+            st.write(f"**可用模型**: {', '.join(provider_data['models'])}")
+
 def main():
     st.set_page_config(
         page_title="EduGuide 智能出题系统",
@@ -56,8 +209,47 @@ def main():
         layout="wide"
     )
     
+    # 侧边栏导航
+    with st.sidebar:
+        st.title("📚 EduGuide")
+        st.markdown("智能出题系统")
+        
+        page = st.radio(
+            "导航",
+            ["🏠 主页", "⚙️ API 设置"],
+            label_visibility="collapsed"
+        )
+        
+        st.markdown("---")
+        
+        # 显示当前 API 提供商
+        try:
+            config_manager = get_config_manager()
+            current_config = config_manager.get_current_config()
+            st.info(f"**当前 API**: {current_config.name}")
+            if current_config.api_key:
+                st.success("✅ 已配置")
+            else:
+                st.warning("⚠️ 未配置 API Key")
+        except:
+            st.warning("⚠️ 请先配置 API")
+    
+    # 根据选择显示页面
+    if page == "⚙️ API 设置":
+        show_settings_page()
+        return
+    
+    # 主页内容
     st.title("📚 EduGuide 智能出题系统")
-    st.markdown("基于 **OpenClaw + 智谱 GLM** 的多 Agent 协作出题系统")
+    st.markdown("基于 **OpenClaw + 多 API 支持** 的智能出题系统")
+    
+    # 检查 API 配置
+    config_manager = get_config_manager()
+    current_config = config_manager.get_current_config()
+    
+    if not current_config.api_key:
+        st.warning("⚠️ 当前 API 未配置，请先前往 **API 设置** 页面配置")
+        return
     
     # 初始化会话状态
     if 'workflow_result' not in st.session_state:
@@ -65,15 +257,6 @@ def main():
     
     if 'material_text' not in st.session_state:
         st.session_state['material_text'] = ""
-    
-    # 侧边栏
-    with st.sidebar:
-        st.header("⚙️ 配置")
-        st.info("✅ 智谱 GLM API 已配置")
-        
-        if st.button("🔄 重置"):
-            st.session_state.clear()
-            st.rerun()
     
     # 主界面
     col1, col2 = st.columns([2, 1])
@@ -155,7 +338,6 @@ def main():
                 with open(knowledge_path, 'r', encoding='utf-8') as f:
                     knowledge = json.load(f)
                 
-                # 美化显示
                 points = knowledge.get("knowledge_points", [])
                 if points:
                     for i, point in enumerate(points, 1):
@@ -182,7 +364,7 @@ def main():
                         st.markdown(f"### {level_names.get(level, level.upper())}")
                         for i, q in enumerate(questions[level], 1):
                             st.markdown(f"**{i}.** {q}")
-                        st.markdown("")  # 空行
+                        st.markdown("")
             else:
                 st.info("暂无数据")
         
@@ -193,7 +375,6 @@ def main():
                 with open(answers_path, 'r', encoding='utf-8') as f:
                     answers = json.load(f)
                 
-                # 美化显示
                 for level in ["basic", "intermediate", "advanced"]:
                     if level in answers:
                         level_names = {

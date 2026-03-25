@@ -2,7 +2,7 @@
 import json
 import os
 from typing import Dict, Any
-from services.glm_client import DeepSeekClient
+from services.unified_client import UnifiedAPIClient as DeepSeekClient
 from prompts.knowledge_prompt import build_knowledge_prompt
 from utils.logger import get_logger
 
