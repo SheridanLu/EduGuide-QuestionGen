@@ -116,3 +116,23 @@
 2. 运行 `streamlit run streamlit_app.py` 启动界面
 3. 或运行 `python main.py` 进行命令行测试
 
+
+---
+
+### 2026-03-25 10:04:00 - API 配置完成
+- **任务**: 配置智谱 GLM API Key
+- **状态**: ✅ 完成
+- **执行者**: AI Agent (全能大龙虾)
+- **操作**:
+  - 将 DeepSeek API 切换为智谱 GLM API
+  - 配置 API Key 到 .env 文件
+  - 创建 services/glm_client.py
+  - 更新所有 Agent 使用 GLMClient
+  - 测试知识点提取功能 ✅
+  - 测试分层出题功能 ✅
+- **测试结果**:
+  - 知识点提取: ✅ 成功（提取5个知识点）
+  - 分层出题: ✅ 成功（生成6道题目）
+  - API 响应速度: 快（glm-4-flash）
+- **下一步**: 可以开始使用系统
+
