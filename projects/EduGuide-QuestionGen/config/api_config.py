@@ -87,19 +87,26 @@ DEFAULT_PROVIDERS = {
 # 可选模型列表
 AVAILABLE_MODELS = {
     APIProvider.ZHIPU: [
-        "glm-4-flash (推荐，快速)",
+        "glm-4-plus (最新旗舰，推荐)",
+        "glm-4-air-0111 (Air最新版)",
+        "glm-4-flash-0111 (Flash最新版)",
+        "glm-4-long (长文本)",
+        "glm-4-plus-0111 (Plus最新版)",
+        "glm-4-0520 (4.0标准版)",
+        "glm-4-flash (快速)",
         "glm-4-air (经济)",
         "glm-4 (标准)",
-        "glm-4-plus (高级)",
-        "glm-4-long (长文本)",
-        "glm-z1-air (推理)",
+        "glm-z1-air (推理经济)",
         "glm-z1-flash (推理快速)",
         "glm-z1 (推理高级)",
+        "glm-3-turbo (经典版)",
     ],
     APIProvider.DEEPSEEK: [
-        "deepseek-chat (V3，推荐)",
-        "deepseek-reasoner (R1，推理)",
-        "deepseek-coder (代码)",
+        "deepseek-chat (V3，最新推荐)",
+        "deepseek-reasoner (R1，推理模型)",
+        "deepseek-coder (V2.5，代码专用)",
+        "deepseek-v3 (V3标准版)",
+        "deepseek-r1 (R1标准版)",
     ],
     APIProvider.OPENAI: [
         "gpt-4o (最新，推荐)",
