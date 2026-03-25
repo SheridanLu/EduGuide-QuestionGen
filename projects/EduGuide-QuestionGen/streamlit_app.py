@@ -489,9 +489,6 @@ def main():
                                         st.markdown(f"**延伸思考:** {follow_up['extension_hint']}")
                 else:
                     st.info("暂无补救题（未指定错误知识点）")
-                            st.markdown(f"**解析:** {item.get('explanation', 'N/A')}")
-                else:
-                    st.json(remedial)
             else:
                 st.info("暂无补救题（未指定错误知识点）")
 
