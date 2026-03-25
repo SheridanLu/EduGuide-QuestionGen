@@ -58,7 +58,7 @@ def t(key, lang="en"):
     return T.get(lang, T["en"]).get(key, key)
 
 # ========== 页面配置 ==========
-st.set_page_config(page_title="EduGuide", page_icon="🎓", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="EduGuide", page_icon="🎓", layout="wide", initial_sidebar_state="auto")
 
 # ========== CSS ==========
 st.markdown("""
