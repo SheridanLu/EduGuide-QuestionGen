@@ -16,7 +16,7 @@ class UnifiedAPIClient:
         self.config_manager = get_config_manager()
         self.config = provider_config or self.config_manager.get_current_config()
         self.max_retries = 3
-        self.timeout = 30
+        self.timeout = 60
         self._client = None
         self._init_client()
     
@@ -73,8 +73,19 @@ class UnifiedAPIClient:
                     
                     raise Exception(f"API 调用失败，已达到最大重试次数: {self.max_retries}")
             
-            except httpx.Timeout as e:
-                logger.error(f"请求超时: {e}")
+            except httpx.ReadTimeout as e:
+                logger.error(f"读取超时: {e}")
+                if attempt < self.max_retries - 1:
+                    logger.warning(f"第 {attempt + 1} 次超时，等待 3 秒后重试...")
+                    time.sleep(3)
+                    continue
+                raise
+            except httpx.ConnectTimeout as e:
+                logger.error(f"连接超时: {e}")
+                if attempt < self.max_retries - 1:
+                    logger.warning(f"第 {attempt + 1} 次连接超时，等待 3 秒后重试...")
+                    time.sleep(3)
+                    continue
                 raise
             except httpx.RequestError as e:
                 logger.error(f"请求错误: {e}")
@@ -132,7 +143,7 @@ class UnifiedAPIClient:
                 result = json.loads(cleaned)
                 logger.info("修复后成功解析 JSON")
                 return result
-            except:
+            except Exception:
                 logger.error(f"无法解析为 JSON: {cleaned[:200]}...")
                 raise ValueError(f"无法解析模型输出: {cleaned[:200]}")
     
@@ -180,9 +191,10 @@ class UnifiedAPIClient:
                 result = json.loads(cleaned)
                 logger.info("修复后成功解析 JSON")
                 return result
-            except:
+            except Exception:
                 logger.error(f"无法解析为 JSON: {cleaned[:200]}...")
                 raise ValueError(f"无法解析模型输出: {cleaned[:200]}")
+
 
 # 工厂函数：根据提供商类型创建客户端
 def create_client(provider: Optional[APIProvider] = None) -> UnifiedAPIClient:
