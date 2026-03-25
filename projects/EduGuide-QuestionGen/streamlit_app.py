@@ -384,7 +384,8 @@ def main():
                 st.info("暂无数据")
         
         with tab3:
-            st.subheader("答案与解析")
+            st.subheader("📚 苏格拉底式引导")
+            st.info("💡 以下内容采用引导式教学，请跟随步骤自己思考，而不是直接看答案")
             answers_path = "output/answers.json"
             if os.path.exists(answers_path):
                 with open(answers_path, 'r', encoding='utf-8') as f:
@@ -393,23 +394,49 @@ def main():
                 for level in ["basic", "intermediate", "advanced"]:
                     if level in answers:
                         level_names = {
-                            "basic": "🟢 基础题答案",
-                            "intermediate": "🟡 中级题答案",
-                            "advanced": "🔴 高级题答案"
+                            "basic": "🟢 基础题引导",
+                            "intermediate": "🟡 中级题引导",
+                            "advanced": "🔴 高级题引导"
                         }
                         st.markdown(f"### {level_names.get(level, level.upper())}")
                         
-                        for item in answers[level]:
+                        for idx, item in enumerate(answers[level], 1):
                             if isinstance(item, dict):
-                                with st.expander(f"**Q:** {item.get('question', 'N/A')}"):
-                                    st.markdown(f"**答案:** {item.get('answer', 'N/A')}")
-                                    st.markdown(f"**解析:** {item.get('explanation', 'N/A')}")
+                                question = item.get('question', 'N/A')
+                                guidance = item.get('guidance', {})
+                                
+                                with st.expander(f"**题目 {idx}:** {question}"):
+                                    # 引导步骤
+                                    st.markdown("#### 🎯 引导步骤")
+                                    for step_key in ['step1', 'step2', 'step3']:
+                                        if step_key in guidance:
+                                            step_num = step_key[-1]
+                                            st.markdown(f"**步骤 {step_num}:** {guidance[step_key]}")
+                                    
+                                    # 提示（可展开）
+                                    if 'hints' in guidance:
+                                        with st.expander("💡 需要提示吗？"):
+                                            for i, hint in enumerate(guidance['hints'], 1):
+                                                st.markdown(f"**提示 {i}:** {hint}")
+                                    
+                                    # 关键点
+                                    if 'key_points' in guidance:
+                                        st.markdown("#### 🔑 关键点")
+                                        for point in guidance['key_points']:
+                                            st.markdown(f"- {point}")
+                                    
+                                    # 常见错误
+                                    if 'common_mistakes' in guidance:
+                                        with st.expander("⚠️ 注意这些常见错误"):
+                                            for mistake in guidance['common_mistakes']:
+                                                st.markdown(f"- {mistake}")
                         st.markdown("")
             else:
                 st.info("暂无数据")
         
         with tab4:
-            st.subheader("补救练习")
+            st.subheader("🤝 补救引导")
+            st.info("💡 当你理解有偏差时，这里会提供苏格拉底式的引导帮助你自己发现问题")
             remedial_path = "output/remedial.json"
             if os.path.exists(remedial_path):
                 with open(remedial_path, 'r', encoding='utf-8') as f:
@@ -418,10 +445,50 @@ def main():
                 remedial_items = remedial.get("remedial", [])
                 if remedial_items:
                     for i, item in enumerate(remedial_items, 1):
-                        with st.expander(f"补救题 {i}"):
+                        with st.expander(f"补救引导 {i}"):
                             st.markdown(f"**原题:** {item.get('original_question', 'N/A')}")
-                            st.markdown(f"**错误点:** {item.get('wrong_point', 'N/A')}")
-                            st.markdown(f"**补救题:** {item.get('remedial_question', 'N/A')}")
+                            
+                            guidance = item.get('guidance', {})
+                            practice = item.get('practice', {})
+                            follow_up = item.get('follow_up', {})
+                            
+                            # 肯定努力
+                            if 'acknowledge' in guidance:
+                                st.success(f"💬 {guidance['acknowledge']}")
+                            
+                            # 探询问题
+                            st.markdown("#### 🤔 让我们一起思考")
+                            for q_key in ['probing_question_1', 'probing_question_2', 'probing_question_3']:
+                                if q_key in guidance:
+                                    st.markdown(f"**{guidance[q_key]}**")
+                                    st.markdown("*请先自己思考，再继续*")
+                            
+                            # 类比
+                            if 'analogy' in guidance:
+                                with st.expander("🎭 需要一个类比吗？"):
+                                    st.markdown(f"**类比:** {guidance['analogy']}")
+                            
+                            # 鼓励
+                            if 'encouragement' in guidance:
+                                st.info(f"💪 {guidance['encouragement']}")
+                            
+                            # 练习
+                            if practice:
+                                st.markdown("#### 📝 试试这个简化练习")
+                                st.markdown(f"**题目:** {practice.get('simplified_question', 'N/A')}")
+                                if 'guided_steps' in practice:
+                                    with st.expander("💡 需要引导步骤吗？"):
+                                        for step in practice['guided_steps']:
+                                            st.markdown(f"- {step}")
+                            
+                            # 跟进
+                            if follow_up:
+                                with st.expander("✅ 验证你的理解"):
+                                    st.markdown(f"**验证问题:** {follow_up.get('verification_question', 'N/A')}")
+                                    if 'extension_hint' in follow_up:
+                                        st.markdown(f"**延伸思考:** {follow_up['extension_hint']}")
+                else:
+                    st.info("暂无补救题（未指定错误知识点）")
                             st.markdown(f"**解析:** {item.get('explanation', 'N/A')}")
                 else:
                     st.json(remedial)
