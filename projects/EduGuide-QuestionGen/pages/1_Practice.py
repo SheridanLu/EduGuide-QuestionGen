@@ -46,6 +46,13 @@ T = {
         "slide_label": "Slide",
         "your_answer_label": "Your Answer",
         "question_label": "Q",
+        "verifying": "Verifying...",
+        "incorrect": "Not quite right.",
+        "incorrect_detail": "Your answer doesn't fully address the question. Think about it again or try the hint.",
+        "retry_step": "🔄 Try Again",
+        "correct_detail": "Great job! Your understanding is correct.",
+        "attempt": "Attempt",
+        "max_attempts": "Max attempts reached. Showing key points.",
     },
     "zh-CN": {
         "page_title": "🎯 解题练习 - EduGuide",
@@ -87,6 +94,13 @@ T = {
         "slide_label": "幻灯片",
         "your_answer_label": "你的答案",
         "question_label": "Q",
+        "verifying": "验证中...",
+        "incorrect": "答案不太对哦。",
+        "incorrect_detail": "你的答案没有完全回答这个问题，再想想看，或者试试提示。",
+        "retry_step": "🔄 再试一次",
+        "correct_detail": "很好！你的理解是正确的。",
+        "attempt": "第",
+        "max_attempts": "已达最大尝试次数，显示关键点。",
     },
     "zh-TW": {
         "page_title": "🎯 解題練習 - EduGuide",
@@ -128,6 +142,13 @@ T = {
         "slide_label": "投影片",
         "your_answer_label": "你的答案",
         "question_label": "Q",
+        "verifying": "驗證中...",
+        "incorrect": "答案不太對哦。",
+        "incorrect_detail": "你的答案沒有完全回答這個問題，再想想看，或者試試提示。",
+        "retry_step": "🔄 再試一次",
+        "correct_detail": "很好！你的理解是正確的。",
+        "attempt": "第",
+        "max_attempts": "已達最大嘗試次數，顯示關鍵點。",
     }
 }
 
@@ -145,6 +166,70 @@ def init_session_state():
         st.session_state.completed_questions = set()
     if 'show_hints' not in st.session_state:
         st.session_state.show_hints = {}
+    if 'step_attempts' not in st.session_state:
+        st.session_state.step_attempts = {}
+
+def verify_answer_with_ai(question_text, step_prompt, user_answer, key_points, lang):
+    """调用AI验证学生答案是否正确"""
+    try:
+        import httpx
+        from config.api_config import get_config_manager
+        cfg = get_config_manager().get_current_config()
+        
+        if not cfg.api_key:
+            return False, t('incorrect_detail', lang)
+        
+        prompt_map = {
+            "en": "You are an educator verifying a student's answer. Be strict but fair.\n\n",
+            "zh-CN": "你是一位严格但公正的教育者，正在验证学生的答案。\n\n",
+            "zh-TW": "你是一位嚴格但公正的教育者，正在驗證學生的答案。\n\n",
+        }
+        
+        prompt = prompt_map.get(lang, prompt_map["en"])
+        prompt += f"Question context: {question_text}\n\n"
+        prompt += f"Current step asks: {step_prompt}\n\n"
+        if key_points:
+            prompt += f"Expected key points:\n" + "\n".join(f"- {kp}" for kp in key_points) + "\n\n"
+        prompt += f"Student's answer: {user_answer}\n\n"
+        prompt += "Respond in JSON format only:\n"
+        prompt += '{"correct": true/false, "feedback": "brief explanation in the same language as the student"}'
+        
+        headers = {
+            "Authorization": f"Bearer {cfg.api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": cfg.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.3,
+            "max_tokens": 200
+        }
+        
+        with httpx.Client(timeout=30.0) as client:
+            resp = client.post(
+                f"{cfg.base_url}/chat/completions",
+                headers=headers,
+                json=payload
+            )
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"].strip()
+            
+            # 解析JSON
+            import re
+            json_match = re.search(r'\{[^}]+\}', content)
+            if json_match:
+                result = json.loads(json_match.group())
+                return result.get("correct", False), result.get("feedback", "")
+            return False, t('incorrect_detail', lang)
+            
+    except Exception as e:
+        # AI验证失败时，用关键词匹配作为fallback
+        if key_points:
+            matched = sum(1 for kp in key_points if kp.lower() in user_answer.lower())
+            if matched >= len(key_points) * 0.5:
+                return True, t('correct_detail', lang)
+        return False, f"Error: {e}"
 
 def load_questions():
     questions_path = "output/questions.json"
@@ -240,18 +325,49 @@ def render_interactive_steps(question_id, question_text, guidance, lang):
             placeholder=t('placeholder', lang)
         )
         
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button(f"✅ {t('submit', lang)}", key=f"submit_{question_id}_{st.session_state.current_step}", type="primary", use_container_width=True):
-                if user_answer.strip():
-                    if question_id not in st.session_state.user_answers:
-                        st.session_state.user_answers[question_id] = []
-                    st.session_state.user_answers[question_id].append(user_answer)
-                    st.session_state.current_step += 1
-                    st.success(t('correct', lang))
-                    st.rerun()
-                else:
-                    st.warning(t('enter_answer', lang))
+        # 尝试次数
+        attempt_key = f"{question_id}_{st.session_state.current_step}"
+        attempts = st.session_state.step_attempts.get(attempt_key, 0)
+        max_attempts = 3
+        
+        if attempts >= max_attempts:
+            st.warning(t('max_attempts', lang))
+            with st.expander(t('key_points_title', lang)):
+                for point in guidance.get('key_points', []):
+                    st.markdown(f"- {point}")
+            if st.button(f"➡️ {t('correct', lang)}", key=f"skip_{question_id}_{st.session_state.current_step}", use_container_width=True):
+                st.session_state.user_answers[question_id].append(user_answer)
+                st.session_state.current_step += 1
+                st.rerun()
+        else:
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button(f"✅ {t('submit', lang)}", key=f"submit_{question_id}_{st.session_state.current_step}", type="primary", use_container_width=True):
+                    if user_answer.strip():
+                        with st.spinner(t('verifying', lang)):
+                            key_points = guidance.get('key_points', [])
+                            is_correct, feedback = verify_answer_with_ai(
+                                question_text,
+                                steps[st.session_state.current_step],
+                                user_answer,
+                                key_points,
+                                lang
+                            )
+                        
+                        if is_correct:
+                            if question_id not in st.session_state.user_answers:
+                                st.session_state.user_answers[question_id] = []
+                            st.session_state.user_answers[question_id].append(user_answer)
+                            st.session_state.current_step += 1
+                            st.session_state.step_attempts[attempt_key] = 0
+                            st.success(f"✅ {feedback if feedback else t('correct_detail', lang)}")
+                            st.rerun()
+                        else:
+                            st.session_state.step_attempts[attempt_key] = attempts + 1
+                            st.error(f"❌ {feedback if feedback else t('incorrect_detail', lang)}")
+                            st.caption(f"{t('attempt', lang)} {attempts + 1}/{max_attempts}")
+                    else:
+                        st.warning(t('enter_answer', lang))
         
         with col2:
             hint_key = f"hint_{question_id}_{st.session_state.current_step}"
