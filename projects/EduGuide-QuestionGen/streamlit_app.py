@@ -88,7 +88,6 @@ st.markdown("""<style>
     justify-content: space-between;
     padding: 20px 0 16px 0;
     margin-bottom: 0;
-    border-bottom: none;
 }
 
 .logo {
@@ -116,7 +115,58 @@ st.markdown("""<style>
 .nav-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+}
+
+/* === Language Switcher === */
+.lang-switcher {
+    display: flex;
+    gap: 4px;
+    background: #f5f5f5;
+    padding: 4px;
+    border-radius: 10px;
+}
+
+.lang-btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: transparent;
+    white-space: nowrap;
+}
+
+.lang-btn.active {
+    background: white;
+    color: #111;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.lang-btn:hover:not(.active) {
+    color: #555;
+}
+
+/* === API Button === */
+.api-toggle-btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1.5px solid #e0e0e0;
+    background: white;
+    margin-left: 4px;
+}
+
+.api-toggle-btn:hover {
+    border-color: #6366f1;
+    color: #6366f1;
 }
 
 /* === Hero Section === */
@@ -393,6 +443,12 @@ if 'show_api' not in st.session_state: st.session_state.show_api = False
 lang = st.session_state.lang
 
 # ========== 顶部导航 ==========
+active_class = "active"
+lang_buttons = []
+for code, label in LANGUAGES.items():
+    cls = active_class if code == lang else ""
+    lang_buttons.append(f'<button class="lang-btn {cls}" onclick="window.location.href=\'?lang={code}\'">{label}</button>')
+
 st.markdown(f"""
 <div class="top-nav">
     <div class="logo">
@@ -400,13 +456,23 @@ st.markdown(f"""
         EduGuide
     </div>
     <div class="nav-actions">
-        <span class="api-badge">
-            <span class="api-dot"></span>
-            AI Connected
-        </span>
+        <div class="lang-switcher">
+            {"".join(lang_buttons)}
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+# 处理URL参数切换语言
+query_params = st.query_params
+if "lang" in query_params:
+    new_lang = query_params["lang"]
+    if new_lang in LANGUAGES and new_lang != lang:
+        st.session_state.lang = new_lang
+        st.query_params.clear()
+        st.rerun()
+
+lang = st.session_state.lang
 
 # ========== Hero ==========
 st.markdown(f"""
@@ -418,21 +484,8 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ========== 语言 & API ==========
-col_lang, col_api = st.columns([1, 1])
-with col_lang:
-    new_lang = st.selectbox(
-        f"🌐 {t('language', lang)}",
-        list(LANGUAGES.keys()),
-        format_func=lambda x: LANGUAGES[x],
-        index=list(LANGUAGES.keys()).index(lang),
-        label_visibility="collapsed"
-    )
-    if new_lang != lang:
-        st.session_state.lang = new_lang
-        st.rerun()
-with col_api:
-    if st.button(f"⚙️ {t('api', lang)}", key="api_toggle", use_container_width=True):
-        st.session_state.show_api = not st.session_state.show_api
+if st.button(f"⚙️ {t('api', lang)}", key="api_toggle"):
+    st.session_state.show_api = not st.session_state.show_api
 
 # ========== API设置 ==========
 if st.session_state.show_api:
