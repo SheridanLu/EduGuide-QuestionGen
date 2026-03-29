@@ -154,7 +154,29 @@ items = [
 add_bullet(slide, 1, 1.6, 11, 5, items, 17)
 add_footer(slide, 6)
 
-# ========== 第7页：系统架构 ==========
+# ========== 第7页：Agent与LLM的关系 ==========
+slide = prs.slides.add_slide(prs.slide_layouts[6])
+add_title_bar(slide, "Agent与LLM：它们是什么关系？")
+add_text(slide, 1, 1.5, 5.5, 0.6, "什么是LLM（大语言模型）？", 18, True, PURPLE)
+add_bullet(slide, 1, 2.2, 5.5, 1.2, ["AI的大脑 — 能理解和生成人类语言", "例子：GPT-4, GLM-4, DeepSeek, Claude", "像一个知识渊博但需要明确指令的专家"], 14)
+add_text(slide, 7, 1.5, 5.5, 0.6, "什么是Agent（智能代理）？", 18, True, PURPLE)
+add_bullet(slide, 7, 2.2, 5.5, 1.2, ["有特定任务的\"虚拟工作者\" — 调用LLM完成具体工作", "类比：LLM=万能工具 | Agent=使用工具的工匠", "比直接用LLM更有结构和目的性"], 14)
+add_text(slide, 1, 3.8, 5.5, 0.4, "为什么不直接用LLM？", 16, True, RED)
+add_bullet(slide, 1, 4.4, 5.5, 1.5, [
+    "❌ 直接用LLM：一次要求太多 → 输出混乱、质量不稳定",
+    "✅ 用Agent：每个只做一件事 → 质量高、可调试、可监控",
+    "就像：一个人做所有事 vs. 专家团队各司其职",
+], 14)
+add_text(slide, 7, 3.8, 5.5, 0.4, "EduGuide中的Agent分工", 16, True, GREEN)
+add_bullet(slide, 7, 4.4, 5.5, 2, [
+    "📚 知识Agent → \"提取关键概念\"",
+    "📝 题目Agent → \"生成分层题目\"",
+    "🎯 答案Agent → \"设计苏格拉底引导\"",
+    "🤝 补救Agent → \"生成补救建议\"",
+], 14)
+add_footer(slide, 26)
+
+# ========== 第8页：系统架构 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
 add_title_bar(slide, "多Agent系统架构")
 flow = [
@@ -171,7 +193,7 @@ flow = [
     "🎓 交互式练习界面 (AI验证 + 错因分析 + 无限重试)",
 ]
 add_bullet(slide, 2, 1.6, 9, 5.5, flow, 16)
-add_footer(slide, 7)
+add_footer(slide, 26)
 
 # ========== 第8页：多Agent设计 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -186,7 +208,7 @@ add_bullet(slide, 1, 1.6, 6, 3, items, 17)
 add_text(slide, 7.5, 1.6, 5, 0.5, "设计优势", 22, True, PURPLE)
 items2 = ["✅ 模块化 — 独立更新各个Agent", "✅ 可调试 — Agent Monitor实时监控", "✅ 可扩展 — 为新功能添加新Agent", "✅ 可维护 — 每个Agent只做一件事"]
 add_bullet(slide, 7.5, 2.3, 5, 3, items2, 16)
-add_footer(slide, 8)
+add_footer(slide, 26)
 
 # ========== 第9页：技术栈 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -200,7 +222,7 @@ add_bullet(slide, 10, 2.2, 3, 1.5, ["PyPDF2", "python-docx", "python-pptx"], 15)
 add_text(slide, 1, 4, 11, 0.5, "AI/LLM提供商（7个）", 20, True, PURPLE)
 items = ["🟣 智谱GLM (glm-4-plus) | 🔵 DeepSeek (deepseek-chat) | 🟢 OpenAI (gpt-4o)", "🟠 Claude (claude-3.5-sonnet) | 🔴 Qwen (qwen-max) | ⚫ Ollama (llama3) | ⚙️ Custom"]
 add_bullet(slide, 1, 4.7, 11, 1.5, items, 15)
-add_footer(slide, 9)
+add_footer(slide, 26)
 
 # ========== 第10页：苏格拉底方法 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -217,7 +239,7 @@ items2 = [
 ]
 add_bullet(slide, 7, 2.2, 5.5, 2.5, items2, 15)
 add_text(slide, 1, 5.5, 11, 0.8, "🧠 促进深度学习 | 📊 记忆保持率提高55% | 👨‍🏫 模仿人类教师辅导方法", 16, False, GRAY, PP_ALIGN.CENTER)
-add_footer(slide, 10)
+add_footer(slide, 26)
 
 # ========== 第11页：AI答案验证（核心创新）==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -241,7 +263,7 @@ items = [
 ]
 add_bullet(slide, 7.5, 3, 5.5, 2.5, items, 14)
 add_text(slide, 1, 5.8, 11, 0.6, "ChatGPT：直接给答案 ❌ | Quizlet：只判断对错 ❌ | EduGuide：验证+分析+引导 ✅", 16, True, PURPLE, PP_ALIGN.CENTER)
-add_footer(slide, 11)
+add_footer(slide, 26)
 
 # ========== 第12页：功能总览 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -264,7 +286,7 @@ items2 = [
 ]
 add_bullet(slide, 1, 1.6, 5.5, 5, items1, 16)
 add_bullet(slide, 7, 1.6, 5.5, 5, items2, 16)
-add_footer(slide, 12)
+add_footer(slide, 26)
 
 # ========== 第13页：演示准备 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -278,7 +300,7 @@ items = [
 ]
 add_bullet(slide, 1, 2, 5, 3.5, items, 20)
 add_text(slide, 7, 2, 5, 1, "🔗 http://43.160.215.90:8080\n🔗 https://github.com/SheridanLu/EduGuide-QuestionGen", 16, False, PURPLE)
-add_footer(slide, 13)
+add_footer(slide, 26)
 
 # ========== 第14页：演示执行 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -296,7 +318,7 @@ add_bullet(slide, 7, 2.2, 5.5, 2, [
     "打开Agent Monitor → 展示4个Agent工作流",
     "多文件上传演示",
 ], 15)
-add_footer(slide, 14)
+add_footer(slide, 26)
 
 # ========== 第15页：演示亮点 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -313,7 +335,7 @@ items = [
 ]
 add_bullet(slide, 1, 1.6, 11, 5, items, 18)
 add_text(slide, 1, 6, 11, 0.8, "教师需要数小时的工作，EduGuide在数秒内完成，并且像好老师一样引导学生自己发现答案。", 17, True, PURPLE, PP_ALIGN.CENTER)
-add_footer(slide, 15)
+add_footer(slide, 26)
 
 # ========== 第16页：优势 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -324,7 +346,7 @@ add_text(slide, 5, 1.5, 3.5, 0.5, "✅ 技术可行性", 18, True, GREEN)
 add_bullet(slide, 5, 2.2, 3.5, 2, ["🤖 成熟LLM", "🏗️ 4个独立Agent", "📁 4种文件格式", "🔌 7个API提供商"], 14)
 add_text(slide, 9, 1.5, 3.5, 0.5, "✅ 可用性", 18, True, GREEN)
 add_bullet(slide, 9, 2.2, 3.5, 2, ["🖥️ 现代UI", "📱 无需安装", "⚡ 实时反馈", "📡 Agent监控"], 14)
-add_footer(slide, 16)
+add_footer(slide, 26)
 
 # ========== 第17页：劣势 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -335,7 +357,7 @@ add_text(slide, 5, 1.5, 3.5, 0.5, "⚠️ 教育局限", 18, True, ORANGE)
 add_bullet(slide, 5, 2.2, 3.5, 2, ["不能替代教师", "LLM可能偏见", "仅3种语言", "适合文本类学科"], 14)
 add_text(slide, 9, 1.5, 3.5, 0.5, "缓解策略", 18, True, GREEN)
 add_bullet(slide, 9, 2.2, 3.5, 2, ["多提供商容错", "教师可审查", "Ollama离线", "开源改进"], 14)
-add_footer(slide, 17)
+add_footer(slide, 26)
 
 # ========== 第18页：对比 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -360,7 +382,7 @@ for i, row in enumerate(rows):
     size = 15 if is_header else 14
     for j, cell in enumerate(row):
         add_text(slide, 1 + j * 2.8, y, 2.8, 0.5, cell, size, bold, color)
-add_footer(slide, 18)
+add_footer(slide, 26)
 
 # ========== 第19页：总结 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -369,7 +391,7 @@ add_text(slide, 1, 1.5, 11, 0.6, "我们构建了什么：", 20, True, PURPLE)
 items = ["📚 自动从材料生成分层题目", "🎯 苏格拉底式引导教学", "🤖 AI答案验证+错因分析+引导提示", "🔄 无限次重试，不放弃任何学生", "📡 Agent监控可视化", "🌍 多语言支持 | 🔧 7个AI提供商"]
 add_bullet(slide, 1, 2.3, 11, 3, items, 17)
 add_text(slide, 1, 5.5, 11, 0.6, "核心创新：多Agent架构 + 苏格拉底方法 + AI答案验证(错因分析) + 无限重试", 16, True, PURPLE, PP_ALIGN.CENTER)
-add_footer(slide, 19)
+add_footer(slide, 26)
 
 # ========== 第20页：关键收益 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -382,7 +404,7 @@ for idx, items in enumerate([items1, items2, items3, items4]):
     x = 0.8 + (idx % 2) * 6.2
     y = 1.6 + (idx // 2) * 3
     add_bullet(slide, x, y, 5.5, 2.5, items, 15)
-add_footer(slide, 20)
+add_footer(slide, 26)
 
 # ========== 第21页：未来工作 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -393,7 +415,7 @@ add_text(slide, 7, 1.5, 5.5, 0.5, "中期（6个月）", 18, True, PURPLE)
 add_bullet(slide, 7, 2.2, 5.5, 1.5, ["🤖 教育领域微调模型", "👥 协作学习", "📈 自适应难度"], 15)
 add_text(slide, 1, 4.2, 5.5, 0.5, "长期（1年）", 18, True, PURPLE)
 add_bullet(slide, 1, 4.9, 5.5, 1.5, ["🔌 LMS集成 (Moodle/Canvas)", "🌐 更多语言", "🧪 教育研究平台"], 15)
-add_footer(slide, 21)
+add_footer(slide, 26)
 
 # ========== 第22页：结论 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -425,7 +447,7 @@ refs = [
     "Wooldridge, M. (2009). An introduction to multiagent systems. Wiley.",
 ]
 add_bullet(slide, 0.8, 1.5, 11.5, 5.5, refs, 13)
-add_footer(slide, 24)
+add_footer(slide, 26)
 
 # ========== 第25页：工作分配 ==========
 slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -444,7 +466,7 @@ for i, row in enumerate(rows):
     color = PURPLE if is_header else BLACK
     for j, cell in enumerate(row):
         add_text(slide, 0.8 + j * 3, y, 3, 0.5, cell, 15 if is_header else 14, is_header, color)
-add_footer(slide, 25)
+add_footer(slide, 26)
 
 # ========== 保存 ==========
 output_path = "/root/.openclaw/workspace/projects/EduGuide-QuestionGen/EduGuide_Presentation_Chinese_v2.pptx"
