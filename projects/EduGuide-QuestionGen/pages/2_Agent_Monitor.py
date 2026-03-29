@@ -1,345 +1,425 @@
-# pages/🔍_Agent_Monitor.py - Agent交互监控页面
+# pages/2_Agent_Monitor.py - Agent监控可视化
 import streamlit as st
 import json
 import os
 import time
 from datetime import datetime
 
-# 页面配置
-st.set_page_config(
-    page_title="Agent Monitor - EduGuide",
-    page_icon="🔍",
-    layout="wide"
-)
+# ========== 多语言 ==========
+T = {
+    "en": {
+        "title": "Agent Monitor",
+        "subtitle": "Real-time visualization of multi-agent collaboration",
+        "refresh": "Refresh Status",
+        "clear": "Clear",
+        "input": "Input", "output": "Output",
+        "no_logs": "No logs yet. Generate questions first, then refresh.",
+        "no_data": "No data yet.",
+        "download": "Download",
+        "points": "points",
+        "questions": "questions",
+        "guidance": "guidance",
+        "remedial": "remedial items",
+        "workflow": "Agent Workflow",
+        "status": "Status",
+        "data_view": "Output Data",
+        "how_to": "How to Use",
+        "how_to_text": "1. Generate questions on the main page\n2. Come back here and click Refresh\n3. Watch agents process in sequence",
+        "knowledge": "Knowledge", "question_tab": "Questions",
+        "answer_tab": "Guidance", "remedial_tab": "Remedial",
+        "processing": "Processing...",
+        "extracted": "Extracted",
+        "generated": "Generated",
+        "created": "Created",
+        "waiting_input": "Waiting for input",
+        "no_errors": "No student errors",
+        "from": "from",
+        "for": "for",
+        "each": "each",
+    },
+    "zh-CN": {
+        "title": "Agent 监控",
+        "subtitle": "多Agent协作实时可视化",
+        "refresh": "刷新状态",
+        "clear": "清空",
+        "input": "输入", "output": "输出",
+        "no_logs": "暂无日志。请先在主页生成题目，然后刷新。",
+        "no_data": "暂无数据。",
+        "download": "下载",
+        "points": "个知识点",
+        "questions": "道题目",
+        "guidance": "条引导",
+        "remedial": "条补救",
+        "workflow": "Agent 工作流",
+        "status": "状态",
+        "data_view": "输出数据",
+        "how_to": "使用说明",
+        "how_to_text": "1. 在主页生成题目\n2. 回到此页面点击刷新\n3. 观察 Agent 依次处理",
+        "knowledge": "知识点", "question_tab": "题目",
+        "answer_tab": "引导", "remedial_tab": "补救",
+        "processing": "处理中...",
+        "extracted": "提取了",
+        "generated": "生成了",
+        "created": "创建了",
+        "waiting_input": "等待输入",
+        "no_errors": "未检测到学生错误",
+        "from": "从",
+        "for": "为",
+        "each": "每道",
+    },
+    "zh-TW": {
+        "title": "Agent 監控",
+        "subtitle": "多Agent協作即時視覺化",
+        "refresh": "重新整理狀態",
+        "clear": "清空",
+        "input": "輸入", "output": "輸出",
+        "no_logs": "暫無日誌。請先在主頁生成題目，然後重新整理。",
+        "no_data": "暫無資料。",
+        "download": "下載",
+        "points": "個知識點",
+        "questions": "道題目",
+        "guidance": "條引導",
+        "remedial": "條補救",
+        "workflow": "Agent 工作流",
+        "status": "狀態",
+        "data_view": "輸出資料",
+        "how_to": "使用說明",
+        "how_to_text": "1. 在主頁生成題目\n2. 回到此頁面點擊重新整理\n3. 觀察 Agent 依序處理",
+        "knowledge": "知識點", "question_tab": "題目",
+        "answer_tab": "引導", "remedial_tab": "補救",
+        "processing": "處理中...",
+        "extracted": "提取了",
+        "generated": "生成了",
+        "created": "建立了",
+        "waiting_input": "等待輸入",
+        "no_errors": "未偵測到學生錯誤",
+        "from": "從",
+        "for": "為",
+        "each": "每道",
+    }
+}
 
-# 自定义CSS
-st.markdown("""
-<style>
-.agent-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border-left: 4px solid #667eea;
+def t(key, lang="en"):
+    return T.get(lang, T["en"]).get(key, key)
+
+# ========== 配置 ==========
+st.set_page_config(page_title="Agent Monitor - EduGuide", page_icon="🔍", layout="wide")
+
+lang = st.session_state.get('lang', 'en')
+
+# ========== CSS ==========
+st.markdown("""<style>
+/* Agent 状态卡片 */
+.agent-node {
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
-.agent-active {
-    border-left-color: #4caf50;
-    animation: pulse 2s infinite;
+.agent-node::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
 }
-.agent-complete {
-    border-left-color: #4caf50;
+.node-waiting {
+    background: #fafbfc;
+    border: 1px solid #f0f0f0;
 }
-.agent-waiting {
-    border-left-color: #999;
+.node-waiting::before { background: #ccc; }
+.node-active {
+    background: #f0f9ff;
+    border: 1.5px solid #93c5fd;
+    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
 }
-.agent-error {
-    border-left-color: #f44336;
+.node-active::before { background: #3b82f6; }
+.node-complete {
+    background: #f0fdf4;
+    border: 1.5px solid #86efac;
 }
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+.node-complete::before { background: #22c55e; }
+.node-error {
+    background: #fef2f2;
+    border: 1.5px solid #fca5a5;
 }
-.log-entry {
-    padding: 0.5rem;
-    margin: 0.25rem 0;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9rem;
+.node-error::before { background: #ef4444; }
+
+.agent-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
 }
-.log-info { background: #e3f2fd; color: #1976d2; }
-.log-success { background: #e8f5e9; color: #388e3c; }
-.log-warning { background: #fff3e0; color: #f57c00; }
-.log-error { background: #ffebee; color: #d32f2f; }
-.timestamp {
-    color: #999;
-    font-size: 0.8rem;
-    margin-right: 0.5rem;
+.agent-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
 }
-.data-box {
-    background: #f5f5f5;
+.agent-desc {
+    font-size: 0.78rem;
+    color: #888;
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+.agent-stat {
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 100px;
+    display: inline-block;
+}
+.stat-complete { background: #dcfce7; color: #166534; }
+.stat-waiting { background: #f3f4f6; color: #6b7280; }
+.stat-active { background: #dbeafe; color: #1e40af; }
+
+/* 连接箭头 */
+.flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d0d0d0;
+    font-size: 1.5rem;
+    padding: 0 4px;
+}
+.flow-arrow.active { color: #6366f1; }
+
+/* 日志 */
+.log-line {
+    padding: 8px 12px;
     border-radius: 8px;
-    padding: 1rem;
-    font-family: monospace;
     font-size: 0.85rem;
-    max-height: 300px;
+    margin: 4px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+}
+.log-info { background: #f0f9ff; color: #1e40af; }
+.log-success { background: #f0fdf4; color: #166534; }
+.log-warning { background: #fffbeb; color: #92400e; }
+.log-error { background: #fef2f2; color: #991b1b; }
+.log-time {
+    font-size: 0.75rem;
+    color: #aaa;
+    white-space: nowrap;
+    margin-top: 2px;
+}
+
+/* 数据JSON */
+.data-card {
+    background: #fafbfc;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 16px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    font-size: 0.82rem;
+    max-height: 400px;
     overflow-y: auto;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Section */
+.section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #aaa;
+    margin-bottom: 16px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# 标题
-st.title("🔍 Agent Interaction Monitor")
-st.markdown("**Real-time visualization of multi-agent collaboration**")
-st.markdown("---")
-
-# Agent配置
+# ========== Agent 配置 ==========
 AGENTS = [
-    {
-        "id": "knowledge",
-        "name": "📚 Knowledge Agent",
-        "description": "Extracts key concepts from teaching materials",
-        "input": "Raw text / Uploaded file",
-        "output": "output/knowledge.json",
-        "color": "#2196f3"
-    },
-    {
-        "id": "question",
-        "name": "📝 Question Agent",
-        "description": "Generates tiered questions (Basic/Intermediate/Advanced)",
-        "input": "output/knowledge.json",
-        "output": "output/questions.json",
-        "color": "#ff9800"
-    },
-    {
-        "id": "answer",
-        "name": "🎯 Answer Agent",
-        "description": "Creates Socratic-style step-by-step guidance",
-        "input": "output/questions.json",
-        "output": "output/answers.json",
-        "color": "#4caf50"
-    },
-    {
-        "id": "remedial",
-        "name": "🤝 Remedial Agent",
-        "description": "Generates remedial questions for student errors",
-        "input": "Student error + question context",
-        "output": "output/remedial.json",
-        "color": "#9c27b0"
-    }
+    {"id": "knowledge", "icon": "📚", "name": {"en": "Knowledge Agent", "zh-CN": "知识Agent", "zh-TW": "知識Agent"},
+     "desc": {"en": "Extract key concepts", "zh-CN": "提取核心概念", "zh-TW": "提取核心概念"},
+     "output": "output/knowledge.json"},
+    {"id": "question", "icon": "📝", "name": {"en": "Question Agent", "zh-CN": "题目Agent", "zh-TW": "題目Agent"},
+     "desc": {"en": "Generate tiered questions", "zh-CN": "生成分级题目", "zh-TW": "生成分級題目"},
+     "output": "output/questions.json"},
+    {"id": "answer", "icon": "🎯", "name": {"en": "Answer Agent", "zh-CN": "引导Agent", "zh-TW": "引導Agent"},
+     "desc": {"en": "Socratic step-by-step guidance", "zh-CN": "苏格拉底式引导", "zh-TW": "蘇格拉底式引導"},
+     "output": "output/answers.json"},
+    {"id": "remedial", "icon": "🤝", "name": {"en": "Remedial Agent", "zh-CN": "补救Agent", "zh-TW": "補救Agent"},
+     "desc": {"en": "Remedial for student errors", "zh-CN": "学生错误补救", "zh-TW": "學生錯誤補救"},
+     "output": "output/remedial.json"},
 ]
 
-# 初始化session state
+# ========== 初始化 ==========
 if 'logs' not in st.session_state:
     st.session_state.logs = []
-
 if 'agent_status' not in st.session_state:
-    st.session_state.agent_status = {agent['id']: 'waiting' for agent in AGENTS}
+    st.session_state.agent_status = {a['id']: 'waiting' for a in AGENTS}
+if 'agent_stats' not in st.session_state:
+    st.session_state.agent_stats = {}
 
-# 功能：读取文件内容
-def read_json_file(filepath):
+# ========== 工具函数 ==========
+def read_json(filepath):
     if os.path.exists(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
             return json.load(f)
     return None
 
-# 功能：添加日志
-def add_log(agent_id, message, level='info'):
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    st.session_state.logs.append({
-        'timestamp': timestamp,
-        'agent': agent_id,
-        'message': message,
-        'level': level
-    })
+def add_log(agent_id, msg, level='info'):
+    ts = datetime.now().strftime("%H:%M:%S")
+    st.session_state.logs.append({'ts': ts, 'agent': agent_id, 'msg': msg, 'level': level})
 
-# 功能：模拟Agent运行
-def simulate_agent_run():
-    # 清空日志
+def refresh_status():
     st.session_state.logs = []
-    st.session_state.agent_status = {agent['id']: 'waiting' for agent in AGENTS}
-    
-    # 检查文件是否存在
-    has_knowledge = os.path.exists('output/knowledge.json')
-    has_questions = os.path.exists('output/questions.json')
-    has_answers = os.path.exists('output/answers.json')
-    has_remedial = os.path.exists('output/remedial.json')
-    
-    # Agent 1: Knowledge
+    st.session_state.agent_status = {a['id']: 'waiting' for a in AGENTS}
+    st.session_state.agent_stats = {}
+
+    files = {
+        'knowledge': 'output/knowledge.json',
+        'question': 'output/questions.json',
+        'answer': 'output/answers.json',
+        'remedial': 'output/remedial.json',
+    }
+
+    # Knowledge
     st.session_state.agent_status['knowledge'] = 'active'
-    add_log('knowledge', 'Started processing teaching material...', 'info')
-    time.sleep(0.5)
-    
-    if has_knowledge:
+    add_log('knowledge', f'{t("processing", lang)}...', 'info')
+    time.sleep(0.3)
+    d = read_json(files['knowledge'])
+    if d:
+        n = len(d.get('knowledge_points', []))
         st.session_state.agent_status['knowledge'] = 'complete'
-        data = read_json_file('output/knowledge.json')
-        count = len(data.get('knowledge_points', []))
-        add_log('knowledge', f'✅ Extracted {count} knowledge points', 'success')
+        st.session_state.agent_stats['knowledge'] = f"{n} {t('points', lang)}"
+        add_log('knowledge', f'✅ {t("extracted", lang)} {n} {t("points", lang)}', 'success')
     else:
-        st.session_state.agent_status['knowledge'] = 'waiting'
-        add_log('knowledge', '⏳ Waiting for input...', 'warning')
-    
-    # Agent 2: Question
+        st.session_state.agent_stats['knowledge'] = ""
+        add_log('knowledge', f'⏳ {t("waiting_input", lang)}', 'warning')
+
+    # Question
     if st.session_state.agent_status['knowledge'] == 'complete':
         st.session_state.agent_status['question'] = 'active'
-        add_log('question', 'Generating questions from knowledge points...', 'info')
-        time.sleep(0.5)
-        
-        if has_questions:
+        add_log('question', f'{t("processing", lang)}...', 'info')
+        time.sleep(0.3)
+        d = read_json(files['question'])
+        if d:
+            n = sum(len(d.get(l, [])) for l in ['basic', 'intermediate', 'advanced'])
             st.session_state.agent_status['question'] = 'complete'
-            data = read_json_file('output/questions.json')
-            total = sum(len(data.get(level, [])) for level in ['basic', 'intermediate', 'advanced'])
-            add_log('question', f'✅ Generated {total} questions (3 levels)', 'success')
+            st.session_state.agent_stats['question'] = f"{n} {t('questions', lang)}"
+            add_log('question', f'✅ {t("generated", lang)} {n} {t("questions", lang)}', 'success')
         else:
-            st.session_state.agent_status['question'] = 'waiting'
-    
-    # Agent 3: Answer
+            add_log('question', '⏳ ...', 'warning')
+
+    # Answer
     if st.session_state.agent_status['question'] == 'complete':
         st.session_state.agent_status['answer'] = 'active'
-        add_log('answer', 'Creating Socratic guidance for each question...', 'info')
-        time.sleep(0.5)
-        
-        if has_answers:
+        add_log('answer', f'{t("processing", lang)}...', 'info')
+        time.sleep(0.3)
+        d = read_json(files['answer'])
+        if d:
+            n = sum(len(d.get(l, [])) for l in ['basic', 'intermediate', 'advanced'])
             st.session_state.agent_status['answer'] = 'complete'
-            data = read_json_file('output/answers.json')
-            total = sum(len(data.get(level, [])) for level in ['basic', 'intermediate', 'advanced'])
-            add_log('answer', f'✅ Created guidance for {total} questions', 'success')
+            st.session_state.agent_stats['answer'] = f"{n} {t('guidance', lang)}"
+            add_log('answer', f'✅ {t("created", lang)} {n} {t("guidance", lang)}', 'success')
         else:
-            st.session_state.agent_status['answer'] = 'waiting'
-    
-    # Agent 4: Remedial (conditional)
-    if has_remedial:
+            add_log('answer', '⏳ ...', 'warning')
+
+    # Remedial
+    d = read_json(files['remedial'])
+    if d:
         st.session_state.agent_status['remedial'] = 'active'
-        add_log('remedial', 'Generating remedial questions...', 'info')
-        time.sleep(0.5)
-        
-        data = read_json_file('output/remedial.json')
-        count = len(data.get('remedial', []))
+        add_log('remedial', f'{t("processing", lang)}...', 'info')
+        time.sleep(0.3)
+        n = len(d.get('remedial', []))
         st.session_state.agent_status['remedial'] = 'complete'
-        add_log('remedial', f'✅ Generated {count} remedial guidance', 'success')
+        st.session_state.agent_stats['remedial'] = f"{n} {t('remedial', lang)}"
+        add_log('remedial', f'✅ {t("generated", lang)} {n} {t("remedial", lang)}', 'success')
     else:
-        add_log('remedial', '⏳ No student errors detected', 'info')
+        st.session_state.agent_stats['remedial'] = ""
+        add_log('remedial', f'ℹ️ {t("no_errors", lang)}', 'info')
 
-# 主界面
-col1, col2 = st.columns([2, 1])
+# ========== 页面内容 ==========
+st.markdown(f'<div class="section-title">{t("workflow", lang).upper()}</div>', unsafe_allow_html=True)
 
-with col1:
-    st.subheader("📊 Agent Status")
-    
-    # Agent卡片
-    for agent in AGENTS:
+# 工作流可视化 - 4个Agent + 箭头
+cols = st.columns([3, 0.5, 3, 0.5, 3, 0.5, 3])
+for i, agent in enumerate(AGENTS):
+    with cols[i * 2]:
         status = st.session_state.agent_status[agent['id']]
-        status_emoji = {
-            'waiting': '⏳',
-            'active': '🔄',
-            'complete': '✅',
-            'error': '❌'
-        }[status]
-        
-        status_class = f"agent-{status}"
-        
+        name = agent['name'].get(lang, agent['name']['en'])
+        desc = agent['desc'].get(lang, agent['desc']['en'])
+        stat = st.session_state.agent_stats.get(agent['id'], '')
+        stat_cls = f"stat-{status}"
+
         st.markdown(f"""
-        <div class="agent-card {status_class}">
-            <h3>{status_emoji} {agent['name']}</h3>
-            <p>{agent['description']}</p>
-            <div style="margin-top: 0.5rem;">
-                <strong>Input:</strong> <code>{agent['input']}</code><br>
-                <strong>Output:</strong> <code>{agent['output']}</code>
-            </div>
+        <div class="agent-node node-{status}">
+            <div class="agent-icon">{agent['icon']}</div>
+            <div class="agent-name">{name}</div>
+            <div class="agent-desc">{desc}</div>
+            {'<div class="agent-stat ' + stat_cls + '">' + stat + '</div>' if stat else ''}
         </div>
         """, unsafe_allow_html=True)
-    
-    # 控制按钮
-    st.markdown("---")
-    col_a, col_b = st.columns(2)
-    with col_a:
-        if st.button("🔄 Refresh Status", type="primary", use_container_width=True):
-            simulate_agent_run()
-            st.rerun()
-    with col_b:
-        if st.button("🗑️ Clear Logs", use_container_width=True):
-            st.session_state.logs = []
-            st.rerun()
 
-with col2:
-    st.subheader("📜 Interaction Log")
-    
-    # 日志显示
-    log_container = st.container()
-    with log_container:
-        if st.session_state.logs:
-            for log in reversed(st.session_state.logs[-20:]):  # 最近20条
-                level_class = f"log-{log['level']}"
-                st.markdown(f"""
-                <div class="log-entry {level_class}">
-                    <span class="timestamp">[{log['timestamp']}]</span>
-                    <strong>{log['agent'].upper()}</strong>: {log['message']}
-                </div>
-                """, unsafe_allow_html=True)
+    # 箭头（不在最后一个后面画）
+    if i < len(AGENTS) - 1:
+        next_status = st.session_state.agent_status[AGENTS[i + 1]['id']]
+        arrow_cls = "active" if status == 'complete' and next_status in ('complete', 'active') else ""
+        with cols[i * 2 + 1]:
+            st.markdown(f'<div class="flow-arrow {arrow_cls}" style="margin-top:30px">→</div>', unsafe_allow_html=True)
+
+# 刷新按钮
+col_r, col_c = st.columns([1, 5])
+with col_r:
+    if st.button(f"🔄 {t('refresh', lang)}", type="primary", use_container_width=True):
+        refresh_status()
+        st.rerun()
+with col_c:
+    if st.button(f"🗑️ {t('clear', lang)}", use_container_width=True):
+        st.session_state.logs = []
+        st.session_state.agent_status = {a['id']: 'waiting' for a in AGENTS}
+        st.session_state.agent_stats = {}
+        st.rerun()
+
+# ========== 日志 ==========
+st.markdown('<div class="section-title">LOG</div>', unsafe_allow_html=True)
+
+if st.session_state.logs:
+    for log in reversed(st.session_state.logs[-15:]):
+        st.markdown(f"""
+        <div class="log-line log-{log['level']}">
+            <span class="log-time">[{log['ts']}]</span>
+            <span><strong>{log['agent'].upper()}</strong>: {log['msg']}</span>
+        </div>
+        """, unsafe_allow_html=True)
+else:
+    st.info(t('no_logs', lang))
+
+# ========== 数据查看 ==========
+st.markdown('<div class="section-title">OUTPUT DATA</div>', unsafe_allow_html=True)
+
+files = [
+    ("output/knowledge.json", t('knowledge', lang)),
+    ("output/questions.json", t('question_tab', lang)),
+    ("output/answers.json", t('answer_tab', lang)),
+    ("output/remedial.json", t('remedial_tab', lang)),
+]
+
+t1, t2, t3, t4 = st.tabs([f"📚 {files[0][1]}", f"📝 {files[1][1]}", f"🎯 {files[2][1]}", f"🤝 {files[3][1]}"])
+
+for tab, (filepath, label) in zip([t1, t2, t3, t4], files):
+    with tab:
+        data = read_json(filepath)
+        if data:
+            st.markdown(f'<div class="data-card">{json.dumps(data, indent=2, ensure_ascii=False)}</div>', unsafe_allow_html=True)
+            st.download_button(
+                f"📥 {t('download', lang)} {os.path.basename(filepath)}",
+                json.dumps(data, indent=2, ensure_ascii=False),
+                os.path.basename(filepath),
+                "application/json"
+            )
         else:
-            st.info("No logs yet. Click 'Refresh Status' to simulate agent interaction.")
+            st.info(t('no_data', lang))
 
-# 数据查看
-st.markdown("---")
-st.subheader("📁 Output Data")
-
-tab1, tab2, tab3, tab4 = st.tabs(["Knowledge", "Questions", "Guidance", "Remedial"])
-
-with tab1:
-    data = read_json_file('output/knowledge.json')
-    if data:
-        st.json(data)
-        st.download_button(
-            "Download JSON",
-            json.dumps(data, indent=2, ensure_ascii=False),
-            "knowledge.json",
-            "application/json"
-        )
-    else:
-        st.info("No knowledge data yet.")
-
-with tab2:
-    data = read_json_file('output/questions.json')
-    if data:
-        st.json(data)
-        st.download_button(
-            "Download JSON",
-            json.dumps(data, indent=2, ensure_ascii=False),
-            "questions.json",
-            "application/json"
-        )
-    else:
-        st.info("No question data yet.")
-
-with tab3:
-    data = read_json_file('output/answers.json')
-    if data:
-        st.json(data)
-        st.download_button(
-            "Download JSON",
-            json.dumps(data, indent=2, ensure_ascii=False),
-            "answers.json",
-            "application/json"
-        )
-    else:
-        st.info("No guidance data yet.")
-
-with tab4:
-    data = read_json_file('output/remedial.json')
-    if data:
-        st.json(data)
-        st.download_button(
-            "Download JSON",
-            json.dumps(data, indent=2, ensure_ascii=False),
-            "remedial.json",
-            "application/json"
-        )
-    else:
-        st.info("No remedial data yet.")
-
-# 使用说明
-st.markdown("---")
-with st.expander("ℹ️ How to Use This Monitor"):
-    st.markdown("""
-    **Purpose:**
-    This page visualizes the multi-agent collaboration in real-time.
-    
-    **How it works:**
-    1. Generate questions on the main page first
-    2. Come back here and click "Refresh Status"
-    3. Watch the agents process in sequence
-    4. View the output JSON files
-    
-    **For Demo:**
-    - Open this page during presentation
-    - Generate questions on main page
-    - Click "Refresh Status" to show agent interaction
-    - Explain each agent's role while showing the logs
-    
-    **Agent Workflow:**
-    ```
-    Knowledge Agent → Question Agent → Answer Agent → Remedial Agent
-         ↓                  ↓                ↓               ↓
-    knowledge.json → questions.json → answers.json → remedial.json
-    ```
-    """)
+# ========== 使用说明 ==========
+with st.expander(f"ℹ️ {t('how_to', lang)}"):
+    st.markdown(t('how_to_text', lang))
