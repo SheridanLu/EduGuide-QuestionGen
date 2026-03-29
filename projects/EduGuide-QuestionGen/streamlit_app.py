@@ -112,61 +112,52 @@ st.markdown("""<style>
     font-size: 18px;
 }
 
-.nav-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+/* === Language Buttons (segmented) === */
+.lang-col > div {
+    padding: 0 !important;
 }
-
-/* === Language Switcher === */
-.lang-switcher {
-    display: flex;
-    gap: 4px;
-    background: #f5f5f5;
-    padding: 4px;
-    border-radius: 10px;
+.lang-col button {
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    padding: 9px 0 !important;
+    border: 1.5px solid #e8e8e8 !important;
+    background: white !important;
+    color: #888 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
 }
-
-.lang-btn {
-    padding: 7px 16px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #888;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-    background: transparent;
-    white-space: nowrap;
+.lang-col button:hover:not(:disabled) {
+    border-color: #c4b5fd !important;
+    color: #6366f1 !important;
+    background: #faf8ff !important;
 }
-
-.lang-btn.active {
-    background: white;
-    color: #111;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+.lang-col button:disabled {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border-color: transparent !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
 }
-
-.lang-btn:hover:not(.active) {
-    color: #555;
+.lang-col button:disabled:hover {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    color: white !important;
 }
-
-/* === API Button === */
-.api-toggle-btn {
-    padding: 7px 16px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #666;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: 1.5px solid #e0e0e0;
-    background: white;
-    margin-left: 4px;
+.api-col > div {
+    padding: 0 !important;
 }
-
-.api-toggle-btn:hover {
-    border-color: #6366f1;
-    color: #6366f1;
+.api-col button {
+    border-radius: 10px !important;
+    font-size: 1.1rem !important;
+    padding: 9px 0 !important;
+    border: 1.5px solid #e8e8e8 !important;
+    background: white !important;
+    color: #aaa !important;
+    transition: all 0.2s ease !important;
+    box-shadow: none !important;
+}
+.api-col button:hover {
+    border-color: #c4b5fd !important;
+    color: #6366f1 !important;
 }
 
 /* === Hero Section === */
@@ -443,12 +434,6 @@ if 'show_api' not in st.session_state: st.session_state.show_api = False
 lang = st.session_state.lang
 
 # ========== 顶部导航 ==========
-active_class = "active"
-lang_buttons = []
-for code, label in LANGUAGES.items():
-    cls = active_class if code == lang else ""
-    lang_buttons.append(f'<button class="lang-btn {cls}" onclick="window.location.href=\'?lang={code}\'">{label}</button>')
-
 st.markdown(f"""
 <div class="top-nav">
     <div class="logo">
@@ -456,23 +441,31 @@ st.markdown(f"""
         EduGuide
     </div>
     <div class="nav-actions">
-        <div class="lang-switcher">
-            {"".join(lang_buttons)}
-        </div>
+        <span class="api-badge">
+            <span class="api-dot"></span>
+            AI Ready
+        </span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# 处理URL参数切换语言
-query_params = st.query_params
-if "lang" in query_params:
-    new_lang = query_params["lang"]
-    if new_lang in LANGUAGES and new_lang != lang:
-        st.session_state.lang = new_lang
-        st.query_params.clear()
-        st.rerun()
-
-lang = st.session_state.lang
+# 语言切换按钮（Streamlit原生）
+col1, col2, col3, col4 = st.columns([1, 1, 1, 0.6])
+for i, (code, label) in enumerate(LANGUAGES.items()):
+    with [col1, col2, col3][i]:
+        st.markdown('<div class="lang-col">', unsafe_allow_html=True)
+        if code == lang:
+            st.button(label, disabled=True, use_container_width=True)
+        else:
+            if st.button(label, use_container_width=True):
+                st.session_state.lang = code
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+with col4:
+    st.markdown('<div class="api-col">', unsafe_allow_html=True)
+    if st.button(f"⚙️", key="api_toggle", use_container_width=True):
+        st.session_state.show_api = not st.session_state.show_api
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ========== Hero ==========
 st.markdown(f"""
