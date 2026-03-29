@@ -493,14 +493,16 @@ st.markdown(f"""
 # ========== API设置 ==========
 if st.session_state.show_api:
     st.markdown("---")
+    st.markdown(f'<div class="section-title">API {t("api", lang).upper()}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+    
     try:
-        from config.api_config import get_config_manager, APIProvider, ProviderConfig
+        from config.api_config import get_config_manager, APIProvider, ProviderConfig, AVAILABLE_MODELS
         cm = get_config_manager()
         current = cm.current_provider
         providers = cm.get_all_providers()
         options = {p['id']: p['name'] for p in providers}
         
-        # 用radio代替selectbox，避免下拉列表显示不全
         provider_icons = {
             "zhipu": "🟣", "deepseek": "🔵", "openai": "🟢",
             "claude": "🟠", "qwen": "🔴", "ollama": "⚫", "custom": "⚙️"
@@ -514,58 +516,58 @@ if st.session_state.show_api:
         
         current_idx = provider_keys.index(current.value)
         selected_label = st.radio(
-            f"**{t('provider', lang)}**",
+            t('provider', lang),
             provider_labels,
             index=current_idx,
             horizontal=True,
+            label_visibility="collapsed",
         )
         selected = provider_keys[provider_labels.index(selected_label)]
         
         config = cm.providers.get(APIProvider(selected))
         
-        col1, col2 = st.columns(2)
-        with col1:
-            key = st.text_input(f"🔑 {t('key', lang)}", value=config.api_key, type="password", label_visibility="collapsed")
-        with col2:
-            # 模型选择：如果有预定义模型列表则用selectbox，否则用text_input
-            from config.api_config import AVAILABLE_MODELS
-            available_models = AVAILABLE_MODELS.get(APIProvider(selected), [])
-            if available_models:
-                # 从完整描述中提取模型ID
-                model_map = {}
-                for m in available_models:
-                    if " (" in m:
-                        mid = m.split(" (")[0].strip()
-                    else:
-                        mid = m.strip()
-                    model_map[mid] = m
-                
-                # 当前模型是否在列表中
-                model_keys = list(model_map.keys())
-                if config.model in model_keys:
-                    model_idx = model_keys.index(config.model)
-                else:
-                    model_keys.append(config.model)
-                    model_map[config.model] = f"{config.model} (当前)"
-                    model_idx = len(model_keys) - 1
-                
-                selected_model = st.selectbox(
-                    f"🤖 {t('model', lang)}",
-                    model_keys,
-                    index=model_idx,
-                    label_visibility="collapsed",
-                )
-                model = selected_model
-            else:
-                model = st.text_input(f"🤖 {t('model', lang)}", value=config.model, label_visibility="collapsed")
-            
-            if st.button(f"✅ {t('save', lang)}", type="primary", use_container_width=True):
-                new_cfg = ProviderConfig(name=config.name, api_key=key, base_url=config.base_url, model=model, enabled=True)
-                cm.update_provider_config(APIProvider(selected), new_cfg)
-                cm.set_current_provider(APIProvider(selected))
-                st.success(t('saved', lang))
+        # API Key
+        key = st.text_input(f"🔑 {t('key', lang)}", value=config.api_key, type="password", label_visibility="collapsed")
+        
+        # 模型选择
+        available_models = AVAILABLE_MODELS.get(APIProvider(selected), [])
+        model = config.model
+        
+        if available_models:
+            # 展示模型按钮列表
+            st.markdown(f"**🤖 {t('model', lang)}**")
+            cols = st.columns(3)
+            for i, m in enumerate(available_models):
+                mid = m.split(" (")[0].strip() if " (" in m else m.strip()
+                is_current = (mid == config.model)
+                with cols[i % 3]:
+                    if st.button(
+                        f"{'✅ ' if is_current else ''}{m}",
+                        key=f"model_{mid}",
+                        use_container_width=True,
+                        disabled=is_current,
+                    ):
+                        new_cfg = ProviderConfig(
+                            name=config.name, api_key=config.api_key,
+                            base_url=config.base_url, model=mid, enabled=True
+                        )
+                        cm.update_provider_config(APIProvider(selected), new_cfg)
+                        cm.set_current_provider(APIProvider(selected))
+                        st.rerun()
+        else:
+            model = st.text_input(f"🤖 {t('model', lang)}", value=config.model, label_visibility="collapsed")
+        
+        # 保存
+        if st.button(f"✅ {t('save', lang)}", type="primary", use_container_width=True):
+            new_cfg = ProviderConfig(name=config.name, api_key=key, base_url=config.base_url, model=model, enabled=True)
+            cm.update_provider_config(APIProvider(selected), new_cfg)
+            cm.set_current_provider(APIProvider(selected))
+            st.success(t('saved', lang))
+    
     except Exception as e:
         st.error(f"Error: {e}")
+    
+    st.markdown('</div>', unsafe_allow_html=True)  # close glass-card
     st.markdown("---")
 
 # ========== 主内容 ==========
