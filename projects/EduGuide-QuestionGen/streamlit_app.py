@@ -271,11 +271,25 @@ st.markdown("""<style>
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08) !important;
 }
 
-/* === Select === */
+/* === Select / Dropdown === */
 .stSelectbox > div > div {
-    border-radius: 10px !important;
+    border-radius: 12px !important;
     border: 1.5px solid #eee !important;
     padding: 6px 12px !important;
+}
+
+/* 下拉列表选项高度 */
+.stSelectbox [data-baseweb="popover"] {
+    z-index: 9999 !important;
+}
+.stSelectbox [data-baseweb="listbox"] [role="option"] {
+    font-size: 0.88rem !important;
+    padding: 10px 14px !important;
+    min-height: 40px !important;
+    white-space: nowrap !important;
+}
+.stSelectbox [data-baseweb="menu"] {
+    max-height: 320px !important;
 }
 
 /* === Buttons === */
@@ -513,7 +527,38 @@ if st.session_state.show_api:
         with col1:
             key = st.text_input(f"🔑 {t('key', lang)}", value=config.api_key, type="password", label_visibility="collapsed")
         with col2:
-            model = st.text_input(f"🤖 {t('model', lang)}", value=config.model, label_visibility="collapsed")
+            # 模型选择：如果有预定义模型列表则用selectbox，否则用text_input
+            from config.api_config import AVAILABLE_MODELS
+            available_models = AVAILABLE_MODELS.get(APIProvider(selected), [])
+            if available_models:
+                # 从完整描述中提取模型ID
+                model_map = {}
+                for m in available_models:
+                    if " (" in m:
+                        mid = m.split(" (")[0].strip()
+                    else:
+                        mid = m.strip()
+                    model_map[mid] = m
+                
+                # 当前模型是否在列表中
+                model_keys = list(model_map.keys())
+                if config.model in model_keys:
+                    model_idx = model_keys.index(config.model)
+                else:
+                    model_keys.append(config.model)
+                    model_map[config.model] = f"{config.model} (当前)"
+                    model_idx = len(model_keys) - 1
+                
+                selected_model = st.selectbox(
+                    f"🤖 {t('model', lang)}",
+                    model_keys,
+                    index=model_idx,
+                    label_visibility="collapsed",
+                )
+                model = selected_model
+            else:
+                model = st.text_input(f"🤖 {t('model', lang)}", value=config.model, label_visibility="collapsed")
+            
             if st.button(f"✅ {t('save', lang)}", type="primary", use_container_width=True):
                 new_cfg = ProviderConfig(name=config.name, api_key=key, base_url=config.base_url, model=model, enabled=True)
                 cm.update_provider_config(APIProvider(selected), new_cfg)
