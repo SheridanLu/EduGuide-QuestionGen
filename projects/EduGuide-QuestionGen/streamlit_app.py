@@ -476,10 +476,6 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ========== 语言 & API ==========
-if st.button(f"⚙️ {t('api', lang)}", key="api_toggle"):
-    st.session_state.show_api = not st.session_state.show_api
-
 # ========== API设置 ==========
 if st.session_state.show_api:
     st.markdown("---")
