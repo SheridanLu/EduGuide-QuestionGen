@@ -486,13 +486,27 @@ if st.session_state.show_api:
         providers = cm.get_all_providers()
         options = {p['id']: p['name'] for p in providers}
         
-        selected = st.selectbox(
+        # 用radio代替selectbox，避免下拉列表显示不全
+        provider_icons = {
+            "zhipu": "🟣", "deepseek": "🔵", "openai": "🟢",
+            "claude": "🟠", "qwen": "🔴", "ollama": "⚫", "custom": "⚙️"
+        }
+        
+        provider_labels = [
+            f"{provider_icons.get(pid, '🔹')} {name}" 
+            for pid, name in options.items()
+        ]
+        provider_keys = list(options.keys())
+        
+        current_idx = provider_keys.index(current.value)
+        selected_label = st.radio(
             f"**{t('provider', lang)}**",
-            list(options.keys()),
-            format_func=lambda x: options[x],
-            index=list(options.keys()).index(current.value),
-            label_visibility="collapsed",
+            provider_labels,
+            index=current_idx,
+            horizontal=True,
         )
+        selected = provider_keys[provider_labels.index(selected_label)]
+        
         config = cm.providers.get(APIProvider(selected))
         
         col1, col2 = st.columns(2)
