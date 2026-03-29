@@ -13,6 +13,8 @@ T = {
         "input": "Or paste text...", "words": "words",
         "error": "Student error (optional)", "error_hint": "e.g., confused X with Y",
         "generate": "Generate", "generating": "Generating...", "done": "Done!",
+        "files_loaded": "files loaded",
+        "clear": "Clear",
         "knowledge": "Knowledge", "questions": "Questions", "remedial": "Remedial",
         "basic": "Basic", "intermediate": "Intermediate", "advanced": "Advanced",
         "api": "Settings", "provider": "Provider", "key": "API Key", "model": "Model",
@@ -29,6 +31,8 @@ T = {
         "input": "或粘贴文本...", "words": "字",
         "error": "学生错误（可选）", "error_hint": "例如：混淆了A和B",
         "generate": "生成题目", "generating": "生成中...", "done": "完成！",
+        "files_loaded": "个文件已加载",
+        "clear": "清空",
         "knowledge": "知识点", "questions": "题目", "remedial": "补救",
         "basic": "基础", "intermediate": "中级", "advanced": "高级",
         "api": "API 设置", "provider": "提供商", "key": "密钥", "model": "模型",
@@ -44,6 +48,8 @@ T = {
         "input": "或貼上文字...", "words": "字",
         "error": "學生錯誤（可選）", "error_hint": "例如：混淆了A和B",
         "generate": "生成題目", "generating": "生成中...", "done": "完成！",
+        "files_loaded": "個檔案已載入",
+        "clear": "清空",
         "knowledge": "知識點", "questions": "題目", "remedial": "補救",
         "basic": "基礎", "intermediate": "中級", "advanced": "高級",
         "api": "API 設定", "provider": "提供商", "key": "金鑰", "model": "模型",
@@ -404,27 +410,40 @@ with c1:
     </div>
     """, unsafe_allow_html=True)
     
-    uploaded = st.file_uploader("", type=['txt', 'pdf', 'docx', 'pptx'], label_visibility="collapsed")
-    if uploaded:
-        try:
-            if uploaded.name.endswith('.txt'):
-                content = uploaded.read().decode('utf-8')
-            elif uploaded.name.endswith('.pdf'):
-                import PyPDF2
-                content = "\n".join([p.extract_text() for p in PyPDF2.PdfReader(uploaded).pages if p.extract_text()])
-            elif uploaded.name.endswith('.docx'):
-                import docx
-                content = "\n".join([p.text for p in docx.Document(uploaded).paragraphs if p.text])
-            elif uploaded.name.endswith('.pptx'):
-                from pptx import Presentation
-                content = ""
-                for slide in Presentation(uploaded).slides:
-                    for shape in slide.shapes:
-                        if hasattr(shape, "text"): content += shape.text + "\n"
-            st.session_state.text = content
-            st.success(f"✅ {uploaded.name}")
-        except Exception as e:
-            st.error(f"Error: {e}")
+    uploaded_files = st.file_uploader(
+        t('upload', lang),
+        type=['txt', 'pdf', 'docx', 'pptx'],
+        accept_multiple_files=True,
+        label_visibility="collapsed"
+    )
+    if uploaded_files:
+        combined = []
+        file_names = []
+        for f in uploaded_files:
+            try:
+                f.seek(0)
+                if f.name.endswith('.txt'):
+                    combined.append(f.read().decode('utf-8'))
+                elif f.name.endswith('.pdf'):
+                    import PyPDF2
+                    pages = PyPDF2.PdfReader(f).pages
+                    combined.append("\n".join([p.extract_text() for p in pages if p.extract_text()]))
+                elif f.name.endswith('.docx'):
+                    import docx
+                    combined.append("\n".join([p.text for p in docx.Document(f).paragraphs if p.text]))
+                elif f.name.endswith('.pptx'):
+                    from pptx import Presentation
+                    text = ""
+                    for slide in Presentation(f).slides:
+                        for shape in slide.shapes:
+                            if hasattr(shape, "text"): text += shape.text + "\n"
+                    combined.append(text)
+                file_names.append(f.name)
+            except Exception as e:
+                st.error(f"Error reading {f.name}: {e}")
+        if combined:
+            st.session_state.text = "\n\n---\n\n".join(combined)
+            st.success(f"✅ {len(file_names)} {t('files_loaded', lang)}: {', '.join(file_names)}")
     
     # 文本输入
     text = st.text_area(
