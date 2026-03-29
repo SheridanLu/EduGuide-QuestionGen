@@ -34,7 +34,7 @@ class ProviderConfig:
 # 默认配置
 DEFAULT_PROVIDERS = {
     APIProvider.ZHIPU: ProviderConfig(
-        name="智谱 GLM",
+        name="智谱GLM",
         api_key="",
         base_url="https://open.bigmodel.cn/api/paas/v4",
         model="glm-4-flash",
@@ -55,28 +55,28 @@ DEFAULT_PROVIDERS = {
         enabled=False
     ),
     APIProvider.CLAUDE: ProviderConfig(
-        name="Claude (Anthropic)",
+        name="Claude",
         api_key="",
         base_url="https://api.anthropic.com/v1",
         model="claude-3-haiku-20240307",
         enabled=False
     ),
     APIProvider.QWEN: ProviderConfig(
-        name="通义千问",
+        name="Qwen",
         api_key="",
         base_url="https://dashscope.aliyuncs.com/api/v1",
         model="qwen-turbo",
         enabled=False
     ),
     APIProvider.OLLAMA: ProviderConfig(
-        name="Ollama (本地)",
+        name="Ollama",
         api_key="",
         base_url="http://localhost:11434/v1",
         model="llama2",
         enabled=False
     ),
     APIProvider.CUSTOM: ProviderConfig(
-        name="自定义 API",
+        name="Custom",
         api_key="",
         base_url="",
         model="",

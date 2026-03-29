@@ -491,14 +491,15 @@ if st.session_state.show_api:
             list(options.keys()),
             format_func=lambda x: options[x],
             index=list(options.keys()).index(current.value),
+            label_visibility="collapsed",
         )
         config = cm.providers.get(APIProvider(selected))
         
         col1, col2 = st.columns(2)
         with col1:
-            key = st.text_input(f"**{t('key', lang)}**", value=config.api_key, type="password")
+            key = st.text_input(f"🔑 {t('key', lang)}", value=config.api_key, type="password", label_visibility="collapsed")
         with col2:
-            model = st.text_input(f"**{t('model', lang)}**", value=config.model)
+            model = st.text_input(f"🤖 {t('model', lang)}", value=config.model, label_visibility="collapsed")
             if st.button(f"✅ {t('save', lang)}", type="primary", use_container_width=True):
                 new_cfg = ProviderConfig(name=config.name, api_key=key, base_url=config.base_url, model=model, enabled=True)
                 cm.update_provider_config(APIProvider(selected), new_cfg)
