@@ -32,11 +32,17 @@ class OpenClawFlow:
         
         logger.info("OpenClaw 工作流初始化完成")
     
-    def run(self, material_text: str, wrong_point: Optional[str] = None) -> Dict[str, Any]:
+    def run(self, material_text: str, wrong_point: Optional[str] = None, lang: str = "zh-CN") -> Dict[str, Any]:
         """运行完整工作流"""
         logger.info("=" * 50)
         logger.info("开始执行 OpenClaw 工作流")
         logger.info("=" * 50)
+        
+        # 设置所有Agent的语言
+        self.knowledge_agent._lang = lang
+        self.question_agent._lang = lang
+        self.answer_agent._lang = lang
+        self.remedial_agent._lang = lang
         
         # 保存教材文本
         material_path = os.path.join(self.output_dir, "material.txt")

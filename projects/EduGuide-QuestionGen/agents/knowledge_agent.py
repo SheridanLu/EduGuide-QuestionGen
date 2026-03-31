@@ -28,7 +28,7 @@ class KnowledgeAgent:
         logger.info(f"[{self.name}] 开始执行知识点提取...")
         
         # 构建 prompt
-        system_prompt, user_prompt = build_knowledge_prompt(material_text)
+        system_prompt, user_prompt = build_knowledge_prompt(material_text, getattr(self, "_lang", "zh-CN"))
         
         # 调用 DeepSeek API
         response = self.client.call_json(

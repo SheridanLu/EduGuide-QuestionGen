@@ -41,7 +41,7 @@ class AnswerAgent:
         questions_str = json.dumps(questions, ensure_ascii=False, indent=2)
         
         # 构建 prompt
-        system_prompt, user_prompt = build_answer_prompt(knowledge_points, questions_str)
+        system_prompt, user_prompt = build_answer_prompt(knowledge_points, questions_str, getattr(self, "_lang", "zh-CN"))
         
         # 调用 API
         try:

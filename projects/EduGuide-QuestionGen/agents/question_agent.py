@@ -37,7 +37,7 @@ class QuestionAgent:
                 pass
         
         # 构建 prompt
-        system_prompt, user_prompt = build_question_prompt(material_text, knowledge_points)
+        system_prompt, user_prompt = build_question_prompt(material_text, knowledge_points, getattr(self, "_lang", "zh-CN"))
         
         # 调用 API
         try:

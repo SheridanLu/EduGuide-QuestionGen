@@ -324,7 +324,7 @@ def render_interactive_steps(question_id, question_text, guidance, lang):
     for step_idx in range(st.session_state.current_step):
         ans = st.session_state.user_answers.get(f"{question_id}_{step_idx}", '')
         st.markdown(
-            f'<div style="background:#e8f5e9;border-left:4px solid #4caf50;border-radius:8px;padding:1rem;margin:0.5rem 0;">'
+            f'<div style="background:#e8f5e9;color:#1a1a2e;border-left:4px solid #4caf50;border-radius:8px;padding:1rem;margin:0.5rem 0;">'
             f'<strong>✅ {t("step", lang)} {step_idx+1}:</strong><br>'
             f'{ans}'
             f'</div>', unsafe_allow_html=True
@@ -377,7 +377,7 @@ def render_interactive_steps(question_id, question_text, guidance, lang):
                         if error_analysis:
                             st.markdown(f"**🔍 {t('error_analysis', lang)}**")
                             st.markdown(
-                                f'<div style="background:#fff7ed;border-left:4px solid #f59e0b;border-radius:8px;padding:1rem;margin:0.5rem 0;">'
+                                f'<div style="background:#fff7ed;color:#1a1a2e;border-left:4px solid #f59e0b;border-radius:8px;padding:1rem;margin:0.5rem 0;">'
                                 f'{error_analysis}'
                                 f'</div>', unsafe_allow_html=True
                             )
@@ -385,7 +385,7 @@ def render_interactive_steps(question_id, question_text, guidance, lang):
                         if guidance_text:
                             st.markdown(f"**💡 {t('guidance', lang)}**")
                             st.markdown(
-                                f'<div style="background:#f0f9ff;border-left:4px solid #3b82f6;border-radius:8px;padding:1rem;margin:0.5rem 0;">'
+                                f'<div style="background:#f0f9ff;color:#1a1a2e;border-left:4px solid #3b82f6;border-radius:8px;padding:1rem;margin:0.5rem 0;">'
                                 f'{guidance_text}'
                                 f'</div>', unsafe_allow_html=True
                             )
@@ -431,7 +431,7 @@ def render_interactive_steps(question_id, question_text, guidance, lang):
 
 def main():
     # 获取当前语言（从主页session_state继承）
-    lang = st.session_state.get('lang', 'en')
+    lang = st.session_state.get('lang', 'zh-CN')
     
     st.set_page_config(
         page_title=t('page_title', lang),

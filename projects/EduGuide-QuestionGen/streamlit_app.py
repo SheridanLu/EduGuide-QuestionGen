@@ -651,7 +651,7 @@ if st.button(f"🚀  {t('generate', lang)}", type="primary"):
         with st.spinner(t('generating', lang)):
             try:
                 from workflow.openclaw_flow import OpenClawFlow
-                st.session_state.result = OpenClawFlow().run(text, error if error else None)
+                st.session_state.result = OpenClawFlow().run(text, error if error else None, lang=lang)
                 st.success(t('done', lang))
             except Exception as e:
                 st.error(f"Error: {e}")

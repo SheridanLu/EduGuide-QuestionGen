@@ -105,7 +105,7 @@ def t(key, lang="en"):
 # ========== 配置 ==========
 st.set_page_config(page_title="Agent Monitor - EduGuide", page_icon="🔍", layout="wide")
 
-lang = st.session_state.get('lang', 'en')
+lang = st.session_state.get('lang', 'zh-CN')
 
 # ========== CSS ==========
 st.markdown("""<style>
